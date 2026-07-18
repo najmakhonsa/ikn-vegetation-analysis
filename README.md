@@ -5,14 +5,13 @@ vegetasi di wilayah IKN antara April 2024 dan April 2026 menggunakan citra
 Sentinel-2, Random Forest, dan WebGIS interaktif.
 
 ## Anggota Kelompok
-## Anggota Kelompok
 | Nama | Tugas |
 |---|---|
 | Najma Khonsa Tsabita | Ground Truth & Preprocessing Citra |
 | Agnesia Nadya Tassi | Ground Truth & Preprocessing Citra |
 | Fadel Setiawan Arifin | Training Random Forest & Evaluasi |
 | Chalimatus Sa'Diyyah | Training Random Forest & Evaluasi |
-| Muhammad Ridho Azfa Karani | WebGIS & Laporan |
+| Muhammad Ridho Azfa Karani | WebGIS |
 
 ## Wilayah & Objek Target
 - **Wilayah**: Ibu Kota Nusantara (IKN), Kalimantan Timur
