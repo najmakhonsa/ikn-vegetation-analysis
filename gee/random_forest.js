@@ -44,23 +44,45 @@ var bands = ['B2', 'B3', 'B4', 'B8', 'B11', 'B12', 'NDVI', 'NDBI'];
 var groundTruth = ee.FeatureCollection('projects/my-project-2026-488909/assets/GroundTruth_IKN');
 print('Jumlah Ground Truth Keseluruhan:', groundTruth.size());
 
-// 4. SPLIT TRAINING/TESTING (80/20) dengan SEED 42
-var withRandom = groundTruth.randomColumn({seed: 42, columnName: 'random'});
-var trainingPoints = withRandom.filter(ee.Filter.lt('random', 0.8));
-var testingPoints = withRandom.filter(ee.Filter.gte('random', 0.8));
+// 4. SPLIT TRAINING/TESTING (80/20) SECARA PROPORSIONAL PER KELAS-TAHUN
+var gt2024_c1 = groundTruth.filter(ee.Filter.and(ee.Filter.eq('year', 2024), ee.Filter.eq('class', 1))).randomColumn({seed: 42, columnName: 'random'});
+var gt2024_c0 = groundTruth.filter(ee.Filter.and(ee.Filter.eq('year', 2024), ee.Filter.eq('class', 0))).randomColumn({seed: 42, columnName: 'random'});
+var gt2026_c1 = groundTruth.filter(ee.Filter.and(ee.Filter.eq('year', 2026), ee.Filter.eq('class', 1))).randomColumn({seed: 42, columnName: 'random'});
+var gt2026_c0 = groundTruth.filter(ee.Filter.and(ee.Filter.eq('year', 2026), ee.Filter.eq('class', 0))).randomColumn({seed: 42, columnName: 'random'});
 
-print('=== DATA SPLIT (80:20) ===');
+var trainingPoints = gt2024_c1.filter(ee.Filter.lt('random', 0.8))
+  .merge(gt2024_c0.filter(ee.Filter.lt('random', 0.8)))
+  .merge(gt2026_c1.filter(ee.Filter.lt('random', 0.8)))
+  .merge(gt2026_c0.filter(ee.Filter.lt('random', 0.8)));
+
+var testingPoints = gt2024_c1.filter(ee.Filter.gte('random', 0.8))
+  .merge(gt2024_c0.filter(ee.Filter.gte('random', 0.8)))
+  .merge(gt2026_c1.filter(ee.Filter.gte('random', 0.8)))
+  .merge(gt2026_c0.filter(ee.Filter.gte('random', 0.8)));
+
+print('=== DATA SPLIT PROPORSIONAL (80:20) ===');
 print('Training points (80%):', trainingPoints.size());
 print('Testing points (20%):', testingPoints.size());
-print('==========================');
+print('======================================');
 
-// 5. SAMPLE FEATURE VALUES di titik training
-var trainingData = composite2024.select(bands).sampleRegions({
-  collection: trainingPoints,
+// 5. SAMPLE FEATURE VALUES di titik training sesuai tahunnya
+var training2024 = trainingPoints.filter(ee.Filter.eq('year', 2024));
+var trainingData2024 = composite2024.select(bands).sampleRegions({
+  collection: training2024,
   properties: ['class'],
   scale: 10,
   tileScale: 16
 });
+
+var training2026 = trainingPoints.filter(ee.Filter.eq('year', 2026));
+var trainingData2026 = composite2026.select(bands).sampleRegions({
+  collection: training2026,
+  properties: ['class'],
+  scale: 10,
+  tileScale: 16
+});
+
+var trainingData = trainingData2024.merge(trainingData2026);
 
 // 6. TRAIN RANDOM FOREST MODEL
 var classifier = ee.Classifier.smileRandomForest({
