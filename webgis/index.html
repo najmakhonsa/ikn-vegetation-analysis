@@ -1429,6 +1429,82 @@
       border-color: var(--primary);
     }
 
+    /* Specialty Accent Card Styles */
+    .person-card--najma {
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(16, 185, 129, 0.04) 100%);
+    }
+    .person-card--najma:hover {
+      box-shadow: 0 12px 35px rgba(16, 185, 129, 0.18);
+      border-color: rgb(16, 185, 129);
+    }
+    .person-card__badge-najma {
+      background: #10b981;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+    }
+
+    .person-card--agnes {
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(6, 182, 212, 0.04) 100%);
+    }
+    .person-card--agnes:hover {
+      box-shadow: 0 12px 35px rgba(6, 182, 212, 0.18);
+      border-color: rgb(6, 182, 212);
+    }
+    .person-card__badge-agnes {
+      background: #06b6d4;
+      box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
+    }
+
+    .person-card--fadel {
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(245, 158, 11, 0.04) 100%);
+    }
+    .person-card--fadel:hover {
+      box-shadow: 0 12px 35px rgba(245, 158, 11, 0.18);
+      border-color: rgb(245, 158, 11);
+    }
+    .person-card__badge-fadel {
+      background: #f59e0b;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    }
+
+    .person-card--cacha {
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(99, 102, 241, 0.04) 100%);
+    }
+    .person-card--cacha:hover {
+      box-shadow: 0 12px 35px rgba(99, 102, 241, 0.18);
+      border-color: rgb(99, 102, 241);
+    }
+    .person-card__badge-cacha {
+      background: #6366f1;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Unify Avatar Badges */
+    .person-card__badge {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%) translateZ(45px);
+      color: #fff;
+      font-family: var(--ff-ui);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    .person-card__badge-lead {
+      background: var(--primary);
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
+    }
+
     .person-card__avatar {
       position: relative;
       width: 76px; height: 76px;
@@ -1459,24 +1535,6 @@
       justify-content: center;
       font-size: 1.6rem;
       border: 2px solid rgba(5, 150, 105, 0.15);
-    }
-
-    .person-card__badge-lead {
-      position: absolute;
-      bottom: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--primary);
-      color: #fff;
-      font-family: var(--ff-ui);
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
-      white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
     }
 
     .person-card__name {
@@ -2944,65 +3002,68 @@ function maskS2SCL(image) {
 
       <div class="tim__grid reveal-stagger">
         <!-- Card 1: Najma Khonsa Tsabita -->
-        <div class="person-card reveal">
+        <div class="person-card person-card--najma reveal">
           <div>
             <div class="person-card__avatar">
               <img src="public/foto-najma.jpeg" alt="Najma Khonsa Tsabita" class="person-card__avatar-img">
+              <span class="person-card__badge person-card__badge-najma">DATA RESEARCH</span>
             </div>
             <h3 class="person-card__name">Najma Khonsa Tsabita</h3>
             <p class="person-card__role">Ground Truth Collection & Preprocessing Citra</p>
           </div>
-          <span class="person-card__tag">Data Prep & GT</span>
+          <span class="person-card__tag" style="background: rgba(16,185,129,0.08); color: #10b981; border-color: rgba(16,185,129,0.25);">Data Prep & GT</span>
         </div>
 
         <!-- Card 2: Agnesia Nadya Tassi -->
-        <div class="person-card reveal">
+        <div class="person-card person-card--agnes reveal">
           <div>
             <div class="person-card__avatar">
               <img src="public/foto-agnes.jpeg" alt="Agnesia Nadya Tassi" class="person-card__avatar-img">
+              <span class="person-card__badge person-card__badge-agnes">GT SPECIALIST</span>
             </div>
             <h3 class="person-card__name">Agnesia Nadya Tassi</h3>
             <p class="person-card__role">Ground Truth Collection & Preprocessing Citra</p>
           </div>
-          <span class="person-card__tag">Data Prep & GT</span>
+          <span class="person-card__tag" style="background: rgba(6,182,212,0.08); color: #06b6d4; border-color: rgba(6,182,212,0.25);">Data Prep & GT</span>
         </div>
 
         <!-- Card 3: Fadel Setiawan Arifin -->
-        <div class="person-card reveal">
+        <div class="person-card person-card--fadel reveal">
           <div>
             <div class="person-card__avatar">
               <img src="public/foto-fadel.jpg" alt="Fadel Setiawan Arifin" class="person-card__avatar-img">
+              <span class="person-card__badge person-card__badge-fadel">ML ENGINEER</span>
             </div>
             <h3 class="person-card__name">Fadel Setiawan Arifin</h3>
             <p class="person-card__role">Model Training Random Forest & Evaluasi Metrik</p>
           </div>
-          <span class="person-card__tag">Random Forest</span>
+          <span class="person-card__tag" style="background: rgba(245,158,11,0.08); color: #f59e0b; border-color: rgba(245,158,11,0.25);">Random Forest</span>
         </div>
 
         <!-- Card 4: Chalimatus Sa'Diyyah -->
-        <div class="person-card reveal">
+        <div class="person-card person-card--cacha reveal">
           <div>
             <div class="person-card__avatar">
               <img src="public/foto-cacha.png" alt="Chalimatus Sa'Diyyah" class="person-card__avatar-img">
+              <span class="person-card__badge person-card__badge-cacha">MODEL ANALYST</span>
             </div>
             <h3 class="person-card__name">Chalimatus Sa'Diyyah</h3>
             <p class="person-card__role">Model Training Random Forest & Evaluasi Metrik</p>
           </div>
-          <span class="person-card__tag">Random Forest</span>
+          <span class="person-card__tag" style="background: rgba(99,102,241,0.08); color: #6366f1; border-color: rgba(99,102,241,0.25);">Random Forest</span>
         </div>
-
 
         <!-- Card 5: Muhammad Ridho Azfa Karani (Featured Lead Dev) -->
         <div class="person-card person-card--lead reveal">
           <div>
             <div class="person-card__avatar">
               <img src="public/ridho-azfa.jpeg" alt="Muhammad Ridho Azfa Karani" class="person-card__avatar-img">
-              <span class="person-card__badge-lead">LEAD DEV</span>
+              <span class="person-card__badge person-card__badge-lead">LEAD DEV</span>
             </div>
             <h3 class="person-card__name">Muhammad Ridho Azfa Karani</h3>
             <p class="person-card__role">Pengembang WebGIS & Custom Enterprise Portal</p>
           </div>
-          <span class="person-card__tag" style="background: rgba(5,150,105,0.1); color: var(--primary); border-color: rgba(5,150,105,0.3);">WebGIS Architect</span>
+          <span class="person-card__tag" style="background: rgba(5,150,105,0.08); color: var(--primary); border-color: rgba(5,150,105,0.25);">WebGIS Architect</span>
         </div>
       </div>
 
