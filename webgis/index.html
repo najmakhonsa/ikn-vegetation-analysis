@@ -1379,21 +1379,49 @@
       align-items: center;
       justify-content: space-between;
       position: relative;
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                  box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                  border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                  box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                  border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
       overflow: hidden;
+      --mouse-x: 50%;
+      --mouse-y: 50%;
+    }
+
+    /* Subtle cursor-following spotlight glow */
+    .person-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle 120px at var(--mouse-x) var(--mouse-y),
+        rgba(5, 150, 105, 0.09) 0%,
+        rgba(5, 150, 105, 0) 80%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .person-card:hover::after {
+      opacity: 1;
     }
 
     .person-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary);
+      box-shadow: 0 10px 30px rgba(5, 150, 105, 0.15);
+      border-color: rgba(5, 150, 105, 0.4);
     }
 
     .person-card--lead {
       border: 2px solid var(--primary);
       background: linear-gradient(180deg, var(--surface) 0%, var(--surface-hover) 100%);
+    }
+
+    .person-card--lead:hover {
+      box-shadow: 0 12px 35px rgba(5, 150, 105, 0.22);
+      border-color: var(--primary);
     }
 
     .person-card__avatar {
@@ -1404,6 +1432,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transform: translateZ(40px);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .person-card__avatar-img {
@@ -1451,6 +1481,8 @@
       color: var(--ink);
       margin-bottom: 0.35rem;
       line-height: 1.25;
+      transform: translateZ(25px);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .person-card__role {
@@ -1459,6 +1491,8 @@
       color: var(--ink-muted);
       line-height: 1.45;
       margin-bottom: 0.85rem;
+      transform: translateZ(15px);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     .person-card__tag {
@@ -1471,6 +1505,8 @@
       background: var(--surface-alt);
       color: var(--ink);
       border: 1px solid var(--border);
+      transform: translateZ(10px);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     /* ── Roadmap Timeline Architecture ── */
@@ -4163,6 +4199,39 @@ function maskS2SCL(image) {
       });
     };
 
+    /* ── CX.init3DTilt (Interactive team member 3D cards) ── */
+    CX.init3DTilt = function () {
+      var cards = document.querySelectorAll('.person-card');
+      if (!cards.length) return;
+
+      cards.forEach(function (card) {
+        card.addEventListener('mousemove', function (e) {
+          var rect = card.getBoundingClientRect();
+          var x = e.clientX - rect.left;
+          var y = e.clientY - rect.top;
+
+          var centerX = rect.width / 2;
+          var centerY = rect.height / 2;
+          
+          // Max tilt 12 degrees for spatial depth
+          var rotateX = ((centerY - y) / centerY) * 12;
+          var rotateY = ((x - centerX) / centerX) * 12;
+
+          requestAnimationFrame(function () {
+            card.style.transform = 'perspective(1000px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg) translateY(-5px)';
+            card.style.setProperty('--mouse-x', (x / rect.width * 100) + '%');
+            card.style.setProperty('--mouse-y', (y / rect.height * 100) + '%');
+          });
+        });
+
+        card.addEventListener('mouseleave', function () {
+          requestAnimationFrame(function () {
+            card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+          });
+        });
+      });
+    };
+
     /* ── Safe Boot Sequencer & Preloader Failsafe ── */
     function bootApp() {
       try { CX.initPreloader(); } catch (e) { console.warn('Preloader init error:', e); }
@@ -4175,6 +4244,7 @@ function maskS2SCL(image) {
       try { CX.initCalculator(); } catch (e) { console.warn('Calculator init error:', e); }
       try { CX.initMetodologiTabs(); } catch (e) {}
       try { CX.initOpenDataHub(); } catch (e) { console.warn('OpenDataHub init error:', e); }
+      try { CX.init3DTilt(); } catch (e) { console.warn('3DTilt init error:', e); }
 
       var heroTries = 0;
       function tryHero() {
