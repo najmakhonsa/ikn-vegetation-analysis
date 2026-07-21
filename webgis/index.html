@@ -4267,7 +4267,7 @@ function maskS2SCL(image) {
         var carbon = Math.round(ha * 14.5);
         if (valCarbon) valCarbon.textContent = carbon.toLocaleString('id-ID') + ' ton';
 
-        var greenPct = (76.6 + (ha / 257227.6) * 100).toFixed(1);
+        var greenPct = (75.4 + (ha / 257227.6) * 100).toFixed(1);
         if (valGreen) valGreen.textContent = greenPct.replace('.', ',') + '%';
 
         var treesM = ((ha * 1100) / 1000000).toFixed(1);
