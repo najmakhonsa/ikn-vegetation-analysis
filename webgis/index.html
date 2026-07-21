@@ -2414,7 +2414,7 @@
 
           <div style="margin-top:0.75rem;padding:0.55rem 0.65rem;background:var(--surface-alt);border-radius:var(--radius-sm);font-size:0.72rem;color:var(--ink-dim);line-height:1.4;">
             <i class="fas fa-info-circle" style="color:var(--primary);margin-right:0.25rem;"></i>
-            <strong>Catatan:</strong> Layer vegetasi dan deteksi perubahan (Gain, Loss) terintegrasi penuh menggunakan dataset GeoJSON hasil klasifikasi model Random Forest.
+            <strong>Catatan:</strong> Layer vegetasi dan deteksi perubahan terintegrasi penuh dari hasil klasifikasi Random Forest berbasis 8 fitur spektral Sentinel-2 (termasuk indeks <strong>NDVI</strong> vegetasi & <strong>NDBI</strong> lahan terbangun).
           </div>
         </div>
       </div>
@@ -4155,12 +4155,14 @@ function maskS2SCL(image) {
         }
       }, function (f) {
         var p = f.properties;
-        var cls = p.class === 1 ? 'Vegetasi (Target)' : 'Non-Vegetasi';
+        var cls = p.class === 1 ? 'Vegetasi (Target)' : 'Non-Vegetasi / Terbangun';
+        var ndviVal = (p.NDVI !== undefined && p.NDVI !== null) ? Number(p.NDVI).toFixed(4) : 'N/A';
+        var ndbiVal = (p.NDBI !== undefined && p.NDBI !== null) ? Number(p.NDBI).toFixed(4) : 'N/A';
         return '<strong>Ground Truth #' + p.id + '</strong><br>' +
           'Kelas: <span style="color:' + (p.class === 1 ? '#059669' : '#f59e0b') + ';font-weight:700;">' + cls + '</span><br>' +
           'Tahun: ' + p.year + '<br>' +
-          'NDVI: ' + p.NDVI.toFixed(4) + '<br>' +
-          'NDBI: ' + p.NDBI.toFixed(4);
+          'NDVI (Vegetasi): ' + ndviVal + '<br>' +
+          'NDBI (Terbangun): ' + ndbiVal;
       }, false);
 
       /* ═══════════ CLASSIFICATION & CHANGE LAYERS (Real GeoJSON) ═══════════ */
