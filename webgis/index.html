@@ -1410,8 +1410,13 @@
     }
 
     .person-card:hover {
+      transition-delay: 0s !important;
       box-shadow: 0 10px 30px rgba(5, 150, 105, 0.15);
       border-color: rgba(5, 150, 105, 0.4);
+    }
+
+    .person-card:hover * {
+      transition-delay: 0s !important;
     }
 
     .person-card--lead {
