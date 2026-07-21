@@ -1,0 +1,30 @@
+{
+  "study_area": "Ibu Kota Nusantara (IKN)",
+  "period": "2024 - 2026",
+  "zones": [
+    {
+      "zone_name": "KIPP (Kawasan Inti Pusat Pemerintahan)",
+      "area_ha": 6671,
+      "vegetation_2024_ha": 5820.5,
+      "vegetation_2026_ha": 4120.2,
+      "net_change_ha": -1700.3,
+      "status": "Pembukaan Konstruksi (Loss Dominan)"
+    },
+    {
+      "zone_name": "BWP I (Pusat Keuangan & Bisnis)",
+      "area_ha": 17204,
+      "vegetation_2024_ha": 15810,
+      "vegetation_2026_ha": 16120.4,
+      "net_change_ha": 310.4,
+      "status": "Stabil (Reforestasi Berimbang)"
+    },
+    {
+      "zone_name": "Zona Penyangga Utama & Hutan Lindung",
+      "area_ha": 173111.16,
+      "vegetation_2024_ha": 163164.81,
+      "vegetation_2026_ha": 176745.56,
+      "net_change_ha": 13580.75,
+      "status": "Reforestasi Bekas Tambang (Gain Dominan)"
+    }
+  ]
+}

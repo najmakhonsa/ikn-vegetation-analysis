@@ -1,0 +1,4216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preload" as="image" href="public/logo-nusantara.png" fetchpriority="high">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ibu Kota Nusantara — WebGIS Analisis Perubahan Vegetasi 2024–2026</title>
+
+  <!-- SEO & Meta -->
+  <meta name="description" content="Portal WebGIS interaktif analisis spasiotemporal perubahan tutupan vegetasi Ibu Kota Nusantara (IKN) April 2024 vs 2026, berbasis Sentinel-2 dan smileRandomForest. Universitas Bakrie × Codaxiom.">
+  <meta name="author" content="Tim Riset IKN — Universitas Bakrie & Codaxiom">
+
+  <!-- Typography: Fraunces (Display) & Inter (UI/Body) — font-display: swap -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       DESIGN TOKENS — OKLCH Light Theme (Hue Anchor: 160° Emerald)
+       Derived from: impeccable, color-expert, taste-skill, soft-skill
+       ═══════════════════════════════════════════════════════════ */
+    :root {
+      /* Canvas & Surfaces (60% — dominant) */
+      --canvas:          #f6faf8;
+      --surface:         #ffffff;
+      --surface-hover:   #eef6f2;
+      --surface-alt:     #f0f5f3;
+
+      /* Ink (Text) — near-black from hue 160° family */
+      --ink:             #0c1f17;
+      --ink-body:        #1a2f25;
+      --ink-muted:       #3d6b56;
+      --ink-dim:         #5a8a73;
+
+      /* Primary Emerald (10% — accent) */
+      --primary:         #059669;
+      --primary-dark:    #047857;
+      --primary-light:   #34d399;
+      --primary-surface: #d1fae5;
+      --primary-glow:    rgba(5, 150, 105, 0.15);
+
+      /* Pill radius (curtain badges etc.) */
+      --radius-pill:     9999px;
+
+      /* Accent: Coral (Loss/Danger) */
+      --accent-coral:         #dc2626;
+      --accent-coral-surface: #fee2e2;
+
+      /* Accent: Cyan (Gain/Info — 30% secondary) */
+      --accent-cyan:         #0284c7;
+      --accent-cyan-surface: #e0f2fe;
+
+      /* Accent: Gold (Warning) */
+      --accent-gold:         #b45309;
+      --accent-gold-surface: #fef3c7;
+
+      /* Borders — structural, barely visible */
+      --border:       #e2e8f0;
+      --border-hover: #cbd5e1;
+
+      /* Shadows — multi-layer premium (soft-skill anti-slop) */
+      --shadow-sm:  0 1px 2px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04);
+      --shadow-md:  0 1px 2px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04), 0 16px 32px rgba(0,0,0,0.06);
+      --shadow-lg:  0 1px 3px rgba(0,0,0,0.03), 0 8px 16px rgba(0,0,0,0.05), 0 24px 48px rgba(0,0,0,0.07);
+
+      /* Typography */
+      --ff-display: 'Fraunces', Georgia, serif;
+      --ff-ui:      'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+      /* Easing — strong custom curves (review-animations STANDARDS.md) */
+      --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+      --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-back:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      /* Duration tokens */
+      --dur-press:    140ms;
+      --dur-tooltip:  160ms;
+      --dur-dropdown: 220ms;
+      --dur-panel:    300ms;
+      --dur-reveal:   450ms;
+
+      /* Radius scale (emil-design-eng: pick 4 values, use ONLY those) */
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-full: 9999px;
+
+      /* Z-Index Scale (impeccable discipline) */
+      --z-base:    1;
+      --z-sticky:  100;
+      --z-overlay: 200;
+      --z-modal:   300;
+      --z-toast:   400;
+
+      /* Layout */
+      --container-max: 1280px;
+      --header-h: 64px;
+      --section-gap: clamp(4rem, 8vw, 7rem);
+    }
+
+    /* ── Reset ───────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: auto; }
+
+    body {
+      background: var(--canvas);
+      color: var(--ink-body);
+      font-family: var(--ff-ui);
+      font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* ═══════════════════════════════════════════════════════════
+       PRELOADER (2-second Logo Nusantara Intro Screen)
+       ═══════════════════════════════════════════════════════════ */
+    .preloader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: var(--canvas);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                  visibility 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .preloader.fade-out {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      display: none !important;
+    }
+
+    .preloader__inner {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .preloader__logo-wrap {
+      position: relative;
+      width: 140px; height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .preloader__logo {
+      width: 110px; height: 110px;
+      object-fit: contain;
+      z-index: 2;
+      filter: drop-shadow(0 8px 16px rgba(5, 150, 105, 0.15));
+      animation: preloaderLogoBounce 2s ease-in-out infinite alternate;
+    }
+
+    .preloader__ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-surface) 0%, transparent 70%);
+      animation: preloaderPulse 1.8s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes preloaderPulse {
+      0%   { transform: scale(0.85); opacity: 0.4; }
+      50%  { transform: scale(1.15); opacity: 0.8; }
+      100% { transform: scale(0.85); opacity: 0.4; }
+    }
+
+    @keyframes preloaderLogoBounce {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-6px); }
+    }
+
+    .preloader__brand {
+      font-family: var(--ff-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .preloader__sub {
+      font-family: var(--ff-ui);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-top: 0.35rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .preloader__bar-wrap {
+      width: 180px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 1.75rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preloader__bar {
+      width: 0%;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width 1.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 clamp(1rem, 4vw, 3rem);
+    }
+
+    /* ── Section Label (eyebrow) — max 1 per 3 sections ──── */
+    .section-label {
+      display: block;
+      font-family: var(--ff-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-family: var(--ff-display);
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.15;
+      max-width: 32ch;
+    }
+
+    .section-desc {
+      max-width: 65ch;
+      color: var(--ink-muted);
+      line-height: 1.65;
+      margin-top: 0.75rem;
+    }
+
+    /* Centered Section Header wrapper */
+    .section-header--center {
+      text-align: center;
+      margin-bottom: clamp(2rem, 5vw, 3.5rem);
+    }
+    .section-header--center .section-title {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .section-header--center .section-desc {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       GLASS TOPBAR (fixed) — adapted from gym topbar.html
+       ═══════════════════════════════════════════════════════════ */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: var(--z-sticky);
+      background: rgba(246, 250, 248, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.45s var(--ease-spring), opacity 0.35s var(--ease-out), box-shadow 0.3s ease;
+    }
+
+    .topbar.scrolled {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topbar__inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 clamp(1rem, 3vw, 2.5rem);
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .topbar__brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .topbar__logo {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+    }
+
+    .topbar__brand-text { display: flex; flex-direction: column; }
+
+    .topbar__brand-name {
+      font-family: var(--ff-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .topbar__brand-sub {
+      font-family: var(--ff-ui);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--ink-dim);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Nav links + Traveler */
+    .topbar__nav {
+      display: flex;
+      align-items: center;
+      gap: 0.15rem;
+      position: relative;
+    }
+
+    .topbar__link {
+      font-family: var(--ff-ui);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      text-decoration: none;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      transition: color var(--dur-dropdown) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .topbar__link:hover, .topbar__link.active { color: var(--ink); }
+
+    /* Scrollspy traveler pill */
+    .topbar__traveler {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 1px;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, width;
+    }
+
+    /* Mobile toggle */
+    .topbar__toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .topbar__toggle span {
+      display: block;
+      width: 22px; height: 2px;
+      background: var(--ink);
+      border-radius: 2px;
+      transition: all var(--dur-panel) var(--ease-spring);
+    }
+
+    .topbar__toggle.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .topbar__toggle.open span:nth-child(2) { opacity: 0; }
+    .topbar__toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    @media (max-width: 900px) {
+      .topbar__nav { display: none; }
+      .topbar__toggle { display: flex; }
+    }
+
+    /* Mobile nav overlay */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      top: var(--header-h); left: 0; right: 0; bottom: 0;
+      background: rgba(246, 250, 248, 0.96);
+      backdrop-filter: blur(24px);
+      z-index: calc(var(--z-sticky) - 1);
+      flex-direction: column;
+      padding: 2rem clamp(1rem, 4vw, 3rem);
+      gap: 0.5rem;
+    }
+
+    .mobile-nav.open { display: flex; }
+
+    .mobile-nav a {
+      font-family: var(--ff-ui);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: color var(--dur-dropdown) var(--ease-out);
+    }
+
+    .mobile-nav a:hover { color: var(--primary); }
+
+    /* ═══════════════════════════════════════════════════════════
+       HERO — 100vh pinned video scrub (10s, CX.makeScrubLoop)
+       ═══════════════════════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      min-height: 580px;
+      overflow: hidden;
+      background: var(--ink);
+    }
+
+    .hero__media {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .hero__video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      background: transparent;
+    }
+
+    /* Gradient fallback when no video */
+    .hero__fallback {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(80% 60% at 70% 25%, rgba(5, 150, 105, 0.22), transparent 60%),
+        radial-gradient(60% 50% at 20% 80%, rgba(5, 150, 105, 0.12), transparent 55%),
+        linear-gradient(160deg, #0c1f17 0%, #0a1a14 58%, #060d0a 100%);
+    }
+
+    .hero__fallback::before {
+      content: ''; position: absolute; inset: -25%;
+      background:
+        radial-gradient(38% 38% at 60% 38%, rgba(52, 211, 153, 0.18), transparent 70%),
+        radial-gradient(30% 30% at 28% 68%, rgba(5, 150, 105, 0.12), transparent 70%);
+      animation: heroGlowDrift 18s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    @keyframes heroGlowDrift {
+      0%   { transform: translate3d(-5%, -3%, 0) scale(1); }
+      50%  { transform: translate3d(4%, 5%, 0) scale(1.12); }
+      100% { transform: translate3d(6%, -5%, 0) scale(1.06); }
+    }
+
+    .hero--no-video .hero__video { display: none; }
+
+    .hero__overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(12, 31, 23, 0.58) 0%,
+        rgba(12, 31, 23, 0.28) 42%,
+        rgba(12, 31, 23, 0.72) 100%
+      );
+      z-index: 1;
+    }
+
+    .hero__content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: calc(var(--header-h) + 2rem) clamp(1.5rem, 5vw, 6rem) 4rem;
+      gap: 1.25rem;
+    }
+
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--ff-ui);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #a7f3d0;
+      background: rgba(5, 150, 105, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      backdrop-filter: blur(8px);
+      width: fit-content;
+    }
+
+    .hero__dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: heroPulse 2s infinite;
+    }
+
+    @keyframes heroPulse {
+      0%   { transform: scale(0.95); opacity: 0.7; }
+      50%  { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px #34d399; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    .hero__title {
+      font-family: var(--ff-display);
+      font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      color: #f0fdf4;
+      max-width: 18ch;
+    }
+
+    .hero__title .text-emerald { color: #34d399; }
+
+    .hero__sub {
+      font-family: var(--ff-ui);
+      font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+      line-height: 1.6;
+      color: rgba(240, 253, 244, 0.75);
+      max-width: 52ch;
+    }
+
+    /* Hero KPI stat cards — floating glass */
+    .hero__stats {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .hero__stat {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1.25rem;
+      min-width: 130px;
+    }
+
+    .hero__stat-val {
+      display: block;
+      font-family: var(--ff-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .hero__stat-lbl {
+      display: block;
+      font-family: var(--ff-ui);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(240, 253, 244, 0.65);
+      margin-top: 0.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hero__stat--loss .hero__stat-val { color: #fca5a5; }
+
+    /* Scroll cue */
+    .hero__scroll-cue {
+      position: absolute;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .hero__scroll-text {
+      font-family: var(--ff-ui);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(240, 253, 244, 0.45);
+    }
+
+    .hero__scroll-line {
+      width: 1px; height: 2.5rem;
+      background: rgba(240, 253, 244, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero__scroll-line::after {
+      content: '';
+      position: absolute;
+      top: -40%; left: 0;
+      width: 100%; height: 40%;
+      background: #34d399;
+      animation: heroScrollDrip 1.8s var(--ease-spring) infinite;
+    }
+
+    @keyframes heroScrollDrip {
+      0%        { top: -40%; }
+      60%, 100% { top: 110%; }
+    }
+
+    @media (max-width: 767px) {
+      .hero { min-height: 520px; }
+      .hero__stats { gap: 0.65rem; }
+      .hero__stat { min-width: 110px; padding: 0.65rem 0.85rem; }
+      .hero__scroll-cue { display: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: TENTANG IKN (#tentang)
+       ═══════════════════════════════════════════════════════════ */
+    .tentang {
+      padding: var(--section-gap) 0;
+      text-align: center;
+      background: var(--canvas);
+      position: relative;
+      z-index: 2;
+    }
+
+    .tentang__logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 2.5rem auto 3rem;
+    }
+
+    @keyframes logoFloat {
+      0%   { transform: translateY(0) scale(1); box-shadow: 0 0 40px rgba(5, 150, 105, 0.1); }
+      100% { transform: translateY(-8px) scale(1.03); box-shadow: 0 0 70px rgba(5, 150, 105, 0.22); }
+    }
+
+    .tentang__logo {
+      width: 160px; height: 160px;
+      object-fit: contain;
+      border-radius: var(--radius-lg);
+      background: radial-gradient(circle, var(--primary-surface) 0%, var(--canvas) 70%);
+      padding: 1rem;
+      animation: logoFloat 4s ease-in-out infinite alternate;
+    }
+
+    .tentang__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      text-align: left;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .tentang__grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Shared Card Style (anti-slop: multi-layer shadow, strict radius) ── */
+    .vis-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: clamp(1.5rem, 3vw, 2rem);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--dur-panel) var(--ease-spring),
+                  box-shadow var(--dur-panel) var(--ease-spring);
+    }
+
+    .vis-card__icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .vis-card__icon--emerald { background: var(--primary-surface); color: var(--primary); }
+    .vis-card__icon--cyan    { background: var(--accent-cyan-surface); color: var(--accent-cyan); }
+    .vis-card__icon--gold    { background: var(--accent-gold-surface); color: var(--accent-gold); }
+    .vis-card__icon--coral   { background: var(--accent-coral-surface); color: var(--accent-coral); }
+
+    .vis-card__title {
+      font-family: var(--ff-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.65rem;
+      letter-spacing: -0.01em;
+    }
+
+    .vis-card__text {
+      color: var(--ink-muted);
+      line-height: 1.65;
+      font-size: 0.92rem;
+    }
+
+    /* Hover gating (only pointer devices — emil-design-eng + review-animations) */
+    @media (hover: hover) and (pointer: fine) {
+      .vis-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+      }
+    }
+
+    /* Active press feedback (tactile response) */
+    .vis-card:active,
+    button:active,
+    .topbar__link:active {
+      transform: scale(0.97);
+      transition: transform var(--dur-press) var(--ease-out);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: PETA INTERAKTIF (#peta)
+       ═══════════════════════════════════════════════════════════ */
+    .peta {
+      padding: var(--section-gap) 0;
+    }
+
+    .peta__stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1200px) {
+      .peta__stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .peta__stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .peta__stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.8rem 0.5rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .peta__stat-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .peta__stat-val {
+      display: block;
+      font-family: var(--ff-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+    }
+
+    .peta__stat-lbl {
+      display: block;
+      font-family: var(--ff-ui);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .peta__stat-card--gain .peta__stat-val { color: var(--primary); }
+    .peta__stat-card--loss .peta__stat-val { color: var(--accent-coral); }
+
+    .peta__layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .peta__layout { grid-template-columns: 1fr; }
+    }
+
+    .peta__map-wrap {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      min-height: 600px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #mapLeaflet { width: 100%; height: 100%; min-height: 600px; }
+
+    .peta__sidebar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .peta__sidebar-title {
+      font-family: var(--ff-display);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* Layer toggle row */
+    .layer-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .layer-row:last-child { border-bottom: none; }
+
+    .layer-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .layer-row label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ink-body);
+      cursor: pointer;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .layer-row input[type="checkbox"] {
+      accent-color: var(--primary);
+      width: 15px; height: 15px;
+      cursor: pointer;
+    }
+
+    /* Opacity slider */
+    .layer-slider {
+      width: 100%;
+      height: 4px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      margin-top: 0.15rem;
+      flex-basis: 100%;
+    }
+
+    /* Basemap toggle */
+    .basemap-toggle {
+      display: flex;
+      gap: 0.35rem;
+      background: var(--surface-alt);
+      padding: 0.25rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .basemap-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      font-family: var(--ff-ui);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--dur-dropdown) var(--ease-out);
+    }
+
+    .basemap-btn.active {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: METODOLOGI (#metodologi)
+       ═══════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: METODOLOGI & PIPELINE SPASIAL (#metodologi)
+       ═══════════════════════════════════════════════════════════ */
+    .metodologi {
+      padding: var(--section-gap) 0;
+      background: var(--surface-alt);
+    }
+
+    .metodologi__steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-top: 2.25rem;
+    }
+
+    @media (max-width: 1024px) {
+      .metodologi__steps { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .metodologi__steps { grid-template-columns: 1fr; }
+    }
+
+    .pipeline-step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem 1.35rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pipeline-step-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .pipeline-step-num {
+      position: absolute;
+      top: 1.25rem; right: 1.25rem;
+      font-family: var(--ff-display);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: rgba(5, 150, 105, 0.15);
+      line-height: 1;
+    }
+
+    .pipeline-step-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--primary-surface);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .pipeline-step-title {
+      font-family: var(--ff-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.45rem;
+      line-height: 1.3;
+    }
+
+    .pipeline-step-desc {
+      font-family: var(--ff-ui);
+      font-size: 0.83rem;
+      color: var(--ink-muted);
+      line-height: 1.55;
+      margin-bottom: 1.1rem;
+    }
+
+    .pipeline-step-footer {
+      border-top: 1px dashed var(--border);
+      padding-top: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* Modern Segmented Pill Tab Controls (Anti-2000s) */
+    .gee-tab-btn {
+      font-family: var(--ff-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.42rem 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+      user-select: none;
+    }
+
+    .gee-tab-btn:hover {
+      color: var(--ink);
+      border-color: rgba(5, 150, 105, 0.35);
+      background: rgba(5, 150, 105, 0.06);
+    }
+
+    .gee-tab-btn.active {
+      color: #ffffff !important;
+      background: var(--primary) !important;
+      border-color: var(--primary) !important;
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    }
+
+    /* Interactive Code & Band Importance Hub */
+    .metodologi-hub {
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+      .metodologi-hub { grid-template-columns: 1fr; }
+    }
+
+    .band-importance-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .band-bar-row {
+      margin-bottom: 0.95rem;
+    }
+
+    .band-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.35rem;
+    }
+
+    .band-bar-track {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--surface-alt);
+      overflow: hidden;
+    }
+
+    .band-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #059669, #10b981);
+      transition: width 1s ease-out;
+    }
+
+    /* Code blocks */
+    .code-block {
+      background: #0f1b15;
+      color: #a7f3d0;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      margin-top: 0.75rem;
+    }
+
+    .code-block .kw { color: #7dd3fc; }
+    .code-block .fn { color: #fbbf24; }
+    .code-block .str { color: #86efac; }
+    .code-block .cm { color: #5a8a73; }
+
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: EVALUASI (#evaluasi)
+       ═══════════════════════════════════════════════════════════ */
+    .evaluasi {
+      padding: var(--section-gap) 0;
+    }
+
+    .evaluasi__grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+      align-items: stretch;
+    }
+
+    .evaluasi__left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      height: 100%;
+    }
+
+    .evaluasi__right-col {
+      height: 100%;
+    }
+
+    .evaluasi__grid .vis-card {
+      height: 100%;
+      margin-top: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .evaluasi__left-col .vis-card {
+      height: auto;
+      flex: 1;
+    }
+
+    @media (max-width: 992px) {
+      .evaluasi__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Math & Equations Styling */
+    .math-formula-box {
+      margin-top: 1rem;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .math-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .math-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .math-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .math-body {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .math-equation {
+      font-family: var(--ff-display);
+      font-size: 1.15rem;
+      color: var(--primary);
+      background: rgba(4, 120, 87, 0.06);
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(4, 120, 87, 0.12);
+      white-space: nowrap;
+    }
+
+    .math-explanation {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+
+    .math-var {
+      font-family: var(--ff-display);
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .math-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: var(--radius-pill);
+      background: rgba(4, 120, 87, 0.12);
+      color: var(--primary-dark);
+      border: 1px solid rgba(4, 120, 87, 0.2);
+    }
+
+    /* Confusion matrix table */
+    .cm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .cm-table th, .cm-table td {
+      padding: 0.75rem 1rem;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .cm-table th {
+      background: var(--surface-alt);
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 0.8rem;
+    }
+
+    .cm-table .cm-tp { background: var(--primary-surface); color: var(--primary); font-weight: 700; }
+    .cm-table .cm-tn { background: var(--accent-cyan-surface); color: var(--accent-cyan); font-weight: 700; }
+    .cm-table .cm-fp { background: var(--accent-coral-surface); color: var(--accent-coral); font-weight: 700; }
+    .cm-table .cm-fn { background: var(--primary-surface); color: var(--primary); font-weight: 700; }
+
+    /* Metric cards row */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.15rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--dur-panel) var(--ease-spring),
+                  box-shadow var(--dur-panel) var(--ease-spring);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+      }
+    }
+
+    .metric-card__val {
+      font-family: var(--ff-display);
+      font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .metric-card__lbl {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: INSIGHT (#insight)
+       ═══════════════════════════════════════════════════════════ */
+    .insight {
+      padding: var(--section-gap) 0;
+      background: var(--surface-alt);
+    }
+
+    .insight__grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .insight__full { grid-column: 1 / -1; }
+
+    @media (max-width: 768px) {
+      .insight__grid { grid-template-columns: 1fr; }
+    }
+
+    .insight-card--loss {
+      background: var(--accent-coral-surface);
+      border-color: rgba(220, 38, 38, 0.2);
+    }
+
+    .insight-card--gain {
+      background: var(--primary-surface);
+      border-color: rgba(5, 150, 105, 0.2);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SECTION: TIM & ROADMAP (#tim)
+       ═══════════════════════════════════════════════════════════ */
+    .tim {
+      padding: var(--section-gap) 0;
+    }
+
+    /* Executive Team Member Cards */
+    .tim__grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.25rem;
+      margin-top: 2.25rem;
+    }
+
+    @media (max-width: 1200px) {
+      .tim__grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .tim__grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .tim__grid { grid-template-columns: 1fr; }
+    }
+
+    .person-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem 1.15rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    .person-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .person-card--lead {
+      border: 2px solid var(--primary);
+      background: linear-gradient(180deg, var(--surface) 0%, var(--surface-hover) 100%);
+    }
+
+    .person-card__avatar {
+      position: relative;
+      width: 76px; height: 76px;
+      margin: 0 auto 1.1rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .person-card__avatar-img {
+      width: 76px; height: 76px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--surface);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+
+    .person-card__avatar-icon {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      background: var(--primary-surface);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      border: 2px solid rgba(5, 150, 105, 0.15);
+    }
+
+    .person-card__badge-lead {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      font-family: var(--ff-ui);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
+    }
+
+    .person-card__name {
+      font-family: var(--ff-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.35rem;
+      line-height: 1.25;
+    }
+
+    .person-card__role {
+      font-family: var(--ff-ui);
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      line-height: 1.45;
+      margin-bottom: 0.85rem;
+    }
+
+    .person-card__tag {
+      display: inline-block;
+      font-family: var(--ff-ui);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: var(--surface-alt);
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Roadmap Timeline Architecture ── */
+    .roadmap__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.25rem;
+    }
+
+    @media (max-width: 992px) {
+      .roadmap__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .roadmap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.85rem 1.6rem;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    .roadmap-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--card-accent, var(--primary));
+    }
+
+    .roadmap-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--card-accent, var(--primary));
+    }
+
+    .roadmap-card__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .roadmap-card__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.32rem 0.75rem;
+      border-radius: 999px;
+      font-family: var(--ff-ui);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--badge-bg, rgba(5, 150, 105, 0.08));
+      color: var(--badge-color, var(--primary));
+      border: 1px solid var(--badge-border, rgba(5, 150, 105, 0.2));
+    }
+
+    .roadmap-card__icon {
+      width: 46px; height: 46px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      background: var(--icon-bg, rgba(5, 150, 105, 0.1));
+      color: var(--icon-color, var(--primary));
+    }
+
+    .roadmap-card__title {
+      font-family: var(--ff-display);
+      font-size: 1.28rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .roadmap-card__subtitle {
+      font-family: var(--ff-ui);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-bottom: 0.9rem;
+    }
+
+    .roadmap-card__desc {
+      font-family: var(--ff-ui);
+      font-size: 0.88rem;
+      line-height: 1.58;
+      color: var(--ink-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .roadmap-card__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .roadmap-tag {
+      font-family: var(--ff-ui);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.22rem 0.55rem;
+      border-radius: 4px;
+      background: var(--surface-alt);
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .roadmap-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      font-family: var(--ff-ui);
+      font-size: 0.78rem;
+    }
+
+    .roadmap-card__target-label {
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .roadmap-card__target-val {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       NEW SEKSI 3B: SPLIT-SCREEN SPATIAL COMPARISON CURTAIN (#komparasi)
+       ═══════════════════════════════════════════════════════════ */
+    .komparasi {
+      padding: var(--section-gap) 0;
+      background: var(--surface-alt);
+      text-align: center;
+    }
+
+    .curtain-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      height: 520px;
+      margin: 2.5rem auto 0;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+    }
+
+    .curtain-side {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+    }
+
+    .curtain-side--before {
+      z-index: 1;
+      background: radial-gradient(circle at 60% 60%, #047857 0%, #065f46 100%);
+      background-image: url('public/classified_prediction_2026.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff;
+    }
+
+    .curtain-side--after {
+      z-index: 2;
+      width: 50%;
+      overflow: hidden;
+      background: radial-gradient(circle at 40% 40%, #064e3b 0%, #022c22 100%);
+      background-image: url('public/sentinel_composite_2024.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff;
+      border-right: 2px solid var(--primary);
+    }
+
+    /* Glassmorphic Corner Overlay Cards */
+    .curtain-overlay-card {
+      position: absolute;
+      bottom: 1.5rem;
+      background: rgba(12, 31, 23, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      max-width: 360px;
+      width: calc(100% - 3rem);
+      box-shadow: var(--shadow-lg);
+      z-index: 5;
+      text-align: left;
+      transition: opacity 0.3s ease;
+    }
+
+    .curtain-overlay-card--left {
+      left: 1.5rem;
+    }
+
+    .curtain-overlay-card--right {
+      right: 1.5rem;
+    }
+
+    .curtain-overlay-title {
+      font-family: var(--ff-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-light);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .curtain-overlay-desc {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+      .curtain-wrapper {
+        height: 380px;
+      }
+      .curtain-overlay-card {
+        display: none;
+      }
+    }
+
+    .curtain-badge {
+      position: absolute;
+      top: 1.25rem;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: var(--radius-pill);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .curtain-badge--left { left: 1.25rem; background: rgba(12, 31, 23, 0.75); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+    .curtain-badge--right { right: 1.25rem; background: rgba(5, 150, 105, 0.85); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
+
+    .curtain-handle {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      width: 4px;
+      background: var(--primary);
+      z-index: 15;
+      cursor: ew-resize;
+      transform: translateX(-50%);
+      touch-action: none;
+    }
+
+    .curtain-handle__knob {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--primary);
+      box-shadow: var(--shadow-lg);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary);
+      font-size: 0.85rem;
+      transition: transform 0.2s var(--ease-out);
+    }
+
+    .curtain-handle:hover .curtain-handle__knob {
+      transform: translate(-50%, -50%) scale(1.12);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       NEW SEKSI 6B: KALKULATOR REFORESTASI & KARBON 2030 (#kalkulator)
+       ═══════════════════════════════════════════════════════════ */
+    .kalkulator {
+      padding: var(--section-gap) 0;
+      background: var(--canvas);
+      text-align: center;
+    }
+
+    .calc-card {
+      max-width: 900px;
+      margin: 2.5rem auto 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .calc-slider-box {
+      margin-bottom: 2rem;
+    }
+
+    .calc-slider-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.95rem; font-weight: 700; color: var(--ink);
+      margin-bottom: 0.75rem;
+    }
+
+    .calc-slider-val {
+      font-family: var(--ff-display);
+      font-size: 1.35rem; color: var(--primary);
+    }
+
+    .calc-range-input {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border);
+      outline: none;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .calc-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+      .calc-metrics-grid { grid-template-columns: 1fr; }
+      .curtain-wrapper { height: 380px; }
+    }
+
+    .calc-metric-card {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+      text-align: center;
+    }
+
+    .calc-metric-val {
+      font-family: var(--ff-display);
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .calc-metric-lbl {
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--ink-muted);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       NEW SEKSI 9: OPEN DATA & API DEVELOPER HUB (#opendata)
+       ═══════════════════════════════════════════════════════════ */
+    .opendata {
+      padding: var(--section-gap) 0;
+      background: var(--surface-alt);
+      text-align: center;
+    }
+
+    .opendata-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .opendata-tab-btn {
+      background: var(--surface);
+      color: var(--ink-muted);
+      border: 1px solid var(--border);
+      font-family: var(--ff-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .opendata-tab-btn:hover {
+      color: var(--primary);
+      border-color: rgba(5, 150, 105, 0.3);
+      background: var(--primary-surface);
+    }
+
+    .opendata-tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .opendata-tab-content {
+      display: none;
+      animation: fadeInTab 0.35s var(--ease-out) forwards;
+    }
+
+    .opendata-tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeInTab {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .opendata__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1024px) {
+      .opendata__grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .opendata__grid { grid-template-columns: 1fr; }
+    }
+
+    .data-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      text-align: left;
+      display: flex; flex-direction: column; justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .data-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .data-card__icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--primary-surface);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; margin-bottom: 1rem;
+    }
+
+    .data-card__title {
+      font-family: var(--ff-display);
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--ink); margin-bottom: 0.5rem;
+    }
+
+    .data-card__desc {
+      font-size: 0.83rem; color: var(--ink-muted);
+      line-height: 1.5; margin-bottom: 1.25rem;
+    }
+
+    .data-card__btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: var(--primary); color: #fff;
+      font-family: var(--ff-ui); font-size: 0.82rem; font-weight: 700;
+      padding: 0.6rem 1.1rem; border-radius: var(--radius-sm);
+      text-decoration: none; border: none; cursor: pointer;
+      transition: background 0.2s ease, transform var(--dur-press) ease;
+    }
+
+    .data-card__btn:hover { background: var(--primary-dark); }
+
+    /* ═══════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       FOOTER & GIANT WORDMARK SIGNATURE
+       ═══════════════════════════════════════════════════════════ */
+    .site-footer {
+      background: var(--ink);
+      color: rgba(240, 253, 244, 0.65);
+      padding: 3.5rem 0 0;
+      font-size: 0.82rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .site-footer a {
+      color: #34d399;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .site-footer a:hover { text-decoration: underline; }
+
+    /* Editorial Giant Watermark Signature (Codaxiom.com style) */
+    .footer-mark {
+      font-family: var(--ff-display), 'Fraunces', serif;
+      font-weight: 600;
+      font-size: clamp(3.5rem, 14.5vw, 13.5rem);
+      line-height: 0.78;
+      text-align: center;
+      letter-spacing: -0.035em;
+      user-select: none;
+      pointer-events: none;
+      margin-top: 2rem;
+      transform: translateY(24%);
+      background: linear-gradient(180deg, rgba(240, 253, 244, 0.085), rgba(240, 253, 244, 0.008));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       ANIMATIONS: Scroll Reveal (Intersection Observer)
+       ═══════════════════════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      filter: blur(4px);
+      transition: opacity var(--dur-reveal) var(--ease-out),
+                  transform var(--dur-reveal) var(--ease-out),
+                  filter var(--dur-reveal) var(--ease-out);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    /* Stagger children */
+    .reveal-stagger > .reveal:nth-child(2) { transition-delay: 50ms; }
+    .reveal-stagger > .reveal:nth-child(3) { transition-delay: 100ms; }
+    .reveal-stagger > .reveal:nth-child(4) { transition-delay: 150ms; }
+    .reveal-stagger > .reveal:nth-child(5) { transition-delay: 200ms; }
+
+    /* ═══════════════════════════════════════════════════════════
+       REDUCED MOTION
+       ═══════════════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.2s !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .hero__dot { animation: none; }
+      .hero__scroll-line::after { animation: none; }
+      .hero__fallback::before { animation: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Loading Screen 2 Detik (Logo Nusantara) -->
+  <div class="preloader" id="preloader" role="dialog" aria-label="Memuat Portal IKN">
+    <div class="preloader__inner">
+      <div class="preloader__logo-wrap">
+        <img src="public/logo-nusantara.png" alt="Logo Nusantara" class="preloader__logo" width="110" height="110" fetchpriority="high" decoding="sync">
+        <div class="preloader__ring" aria-hidden="true"></div>
+      </div>
+      <div class="preloader__brand">Ibu Kota Nusantara</div>
+      <div class="preloader__sub">WebGIS Analisis Vegetasi 2024–2026</div>
+      <div class="preloader__bar-wrap">
+        <div class="preloader__bar" id="preloaderBar"></div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════════════════════════════════════════════
+       TOPBAR — Glass, Scrollspy Traveler, CTA
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="topbar" id="topbar">
+    <div class="topbar__inner">
+      <a href="#" class="topbar__brand">
+        <img src="public/logo-nusantara.png" alt="Logo Nusantara" class="topbar__logo" width="36" height="36">
+        <div class="topbar__brand-text">
+          <span class="topbar__brand-name">Ibu Kota Nusantara</span>
+          <span class="topbar__brand-sub">WebGIS Vegetasi</span>
+        </div>
+      </a>
+
+      <nav class="topbar__nav" id="topbarNav">
+        <a href="#tentang" class="topbar__link" data-section="tentang">Tentang IKN</a>
+        <a href="#peta" class="topbar__link" data-section="peta">Peta Interaktif</a>
+        <a href="#komparasi" class="topbar__link" data-section="komparasi">Komparasi</a>
+        <a href="#metodologi" class="topbar__link" data-section="metodologi">Metodologi</a>
+        <a href="#evaluasi" class="topbar__link" data-section="evaluasi">Evaluasi</a>
+        <a href="#insight" class="topbar__link" data-section="insight">Insight</a>
+        <a href="#kalkulator" class="topbar__link" data-section="kalkulator">Kalkulator 2030</a>
+        <a href="#opendata" class="topbar__link" data-section="opendata">Open Data</a>
+        <span class="topbar__traveler" id="topbarTraveler" aria-hidden="true"></span>
+      </nav>
+
+      <button class="topbar__toggle" id="topbarToggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile nav overlay -->
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="#tentang">Tentang IKN</a>
+    <a href="#peta">Peta Interaktif</a>
+    <a href="#komparasi">Komparasi</a>
+    <a href="#metodologi">Metodologi</a>
+    <a href="#evaluasi">Evaluasi</a>
+    <a href="#insight">Insight</a>
+    <a href="#kalkulator">Kalkulator 2030</a>
+    <a href="#tim">Tim Peneliti</a>
+    <a href="#opendata">Open Data Hub</a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HERO — Pinned Video Scrub (10s)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero" data-has-video="true">
+    <div class="hero__media">
+      <div class="hero__fallback" aria-hidden="true"></div>
+      <video
+        class="hero__video"
+        id="heroVideo"
+        src="public/hero.mp4"
+        muted playsinline preload="auto"
+        disablepictureinpicture
+      ></video>
+      <div class="hero__overlay"></div>
+    </div>
+
+    <div class="hero__content">
+      <span class="hero__badge">
+        <span class="hero__dot" aria-hidden="true"></span>
+        Kapita Selekta SI × Maha Data — Universitas Bakrie
+      </span>
+
+      <h1 class="hero__title">
+        Memantau Visi <span class="text-emerald">Green Forest City</span> Ibu Kota Nusantara
+      </h1>
+
+      <p class="hero__sub">
+        Analisis spasiotemporal perubahan tutupan vegetasi IKN April 2024 vs. April 2026, berbasis citra satelit Sentinel-2 dan algoritma smileRandomForest.
+      </p>
+
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <span class="hero__stat-val" data-count="196986">196.986</span>
+          <span class="hero__stat-lbl">Total AOI (ha)</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-val" data-count="12190" data-prefix="+">+12.190</span>
+          <span class="hero__stat-lbl">Net Change (ha)</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-val" data-count="29782" data-prefix="+">+29.782</span>
+          <span class="hero__stat-lbl">Gain (ha)</span>
+        </div>
+        <div class="hero__stat hero__stat--loss">
+          <span class="hero__stat-val" data-count="20610" data-prefix="-">-20.610</span>
+          <span class="hero__stat-lbl">Loss (ha)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero__scroll-cue" id="heroScrollCue" role="button" tabindex="0" style="cursor: pointer;" title="Gulir ke Seksi Berikutnya">
+      <span class="hero__scroll-text">Gulir</span>
+      <span class="hero__scroll-line"></span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TENTANG IKN — Visi, Rumusan Masalah, Manfaat
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="tentang" id="tentang">
+    <div class="container">
+      <span class="section-label reveal">Tentang Ibu Kota Nusantara</span>
+      <h2 class="section-title reveal" style="margin: 0 auto; text-align: center;">
+        Portal Transparansi Spasial untuk Green Forest City Indonesia
+      </h2>
+
+      <div class="tentang__logo-wrap reveal">
+        <img src="public/logo-nusantara.png" alt="Logo Nusantara" class="tentang__logo">
+      </div>
+
+      <div class="tentang__grid reveal-stagger">
+        <div class="vis-card reveal">
+          <div class="vis-card__icon vis-card__icon--emerald">
+            <i class="fas fa-city"></i>
+          </div>
+          <h3 class="vis-card__title">Apa Itu IKN?</h3>
+          <p class="vis-card__text">
+            Ibu Kota Nusantara adalah proyek pemindahan ibu kota Indonesia dari Jakarta ke Kalimantan Timur, dirancang dengan filosofi <em>Smart, Green, Beautiful, and Sustainable Forest City</em> sebagai kota hutan berkelanjutan berwawasan masa depan.
+          </p>
+        </div>
+
+        <div class="vis-card reveal">
+          <div class="vis-card__icon vis-card__icon--cyan">
+            <i class="fas fa-flask-vial"></i>
+          </div>
+          <h3 class="vis-card__title">Rumusan Masalah & Visi Riset</h3>
+          <p class="vis-card__text">
+            Membuktikan secara empiris apakah pembangunan fisik IKN periode April 2024–2026 tetap konsisten mempertahankan komitmen <strong>75% kawasan hijau</strong>, melalui analisis inderaja Sentinel-2 dan model Random Forest tanpa <em>black-box</em>.
+          </p>
+        </div>
+
+        <div class="vis-card reveal">
+          <div class="vis-card__icon vis-card__icon--gold">
+            <i class="fas fa-satellite-dish"></i>
+          </div>
+          <h3 class="vis-card__title">Manfaat Platform</h3>
+          <p class="vis-card__text">
+            Platform WebGIS publik sebagai instrumen transparansi spasial bagi akademisi, publik, dan pengambil kebijakan, dilengkapi dengan Early Warning System (EWS) alih fungsi hutan melalui integrasi WhatsApp OIKN via OpenClaw Gateway.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PETA INTERAKTIF (#peta) — Leaflet + Sidebar
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="peta" id="peta">
+    <div class="container">
+      <span class="section-label reveal">Peta Interaktif WebGIS</span>
+      <h2 class="section-title reveal">Eksplorasi Spasial Tutupan Vegetasi IKN</h2>
+      <div class="peta__stats-grid reveal">
+        <div class="peta__stat-card">
+          <span class="peta__stat-val">196.986,16 ha</span>
+          <span class="peta__stat-lbl">Luas Wilayah AOI</span>
+        </div>
+        <div class="peta__stat-card">
+          <span class="peta__stat-val">184.795,31 ha</span>
+          <span class="peta__stat-lbl">Vegetasi 2024 (93,8%)</span>
+        </div>
+        <div class="peta__stat-card">
+          <span class="peta__stat-val">196.986,16 ha</span>
+          <span class="peta__stat-lbl">Vegetasi 2026 (100%)</span>
+        </div>
+        <div class="peta__stat-card">
+          <span class="peta__stat-val">+12.190,85 ha</span>
+          <span class="peta__stat-lbl">Net Change (+6,6%)</span>
+        </div>
+        <div class="peta__stat-card peta__stat-card--gain">
+          <span class="peta__stat-val">+29.782,80 ha</span>
+          <span class="peta__stat-lbl">Gain (717 Poligon)</span>
+        </div>
+        <div class="peta__stat-card peta__stat-card--loss">
+          <span class="peta__stat-val">-20.610,92 ha</span>
+          <span class="peta__stat-lbl">Loss (242 Poligon)</span>
+        </div>
+      </div>
+
+      <div class="peta__layout">
+        <div class="peta__map-wrap reveal">
+          <div id="mapLeaflet"></div>
+        </div>
+
+        <div class="peta__sidebar reveal">
+          <h3 class="peta__sidebar-title"><i class="fas fa-layer-group"></i> Kontrol Layer</h3>
+
+          <div class="layer-group-label" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);margin-bottom:0.35rem;">Batas Administrasi</div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background:transparent;border:2px dashed #0d9488;"></div>
+            <label><input type="checkbox" id="layerBoundary" checked> Batas IKN 250K</label>
+          </div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background:transparent;border:2px solid #6366f1;"></div>
+            <label><input type="checkbox" id="layerBWP"> BWP IKN 50K (6 Zona)</label>
+          </div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background:rgba(220,38,38,0.15);border:2px solid #dc2626;"></div>
+            <label><input type="checkbox" id="layerKIPP"> KIPP Inti 5K</label>
+          </div>
+
+          <div class="layer-group-label" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);margin:0.65rem 0 0.35rem;">Sampel Ground Truth</div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background:#f59e0b;border-radius:50%;"></div>
+            <label><input type="checkbox" id="layerGroundTruth"> Ground Truth (400 Titik)</label>
+          </div>
+
+          <div class="layer-group-label" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);margin:0.65rem 0 0.35rem;">Hasil Klasifikasi</div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background: #047857;"></div>
+            <label><input type="checkbox" id="layerVeg2024"> Vegetasi April 2024</label>
+            <input type="range" class="layer-slider" id="opVeg2024" min="0" max="100" value="70">
+          </div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background: #059669;"></div>
+            <label><input type="checkbox" id="layerVeg2026" checked> Vegetasi April 2026</label>
+            <input type="range" class="layer-slider" id="opVeg2026" min="0" max="100" value="70">
+          </div>
+
+          <div class="layer-group-label" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);margin:0.65rem 0 0.35rem;">Deteksi Perubahan</div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background: #0284c7;"></div>
+            <label><input type="checkbox" id="layerGain"> Area Gain (+29.782 ha)</label>
+            <input type="range" class="layer-slider" id="opGain" min="0" max="100" value="60">
+          </div>
+          <div class="layer-row">
+            <div class="layer-swatch" style="background: #dc2626;"></div>
+            <label><input type="checkbox" id="layerLoss"> Area Loss (-20.610 ha)</label>
+            <input type="range" class="layer-slider" id="opLoss" min="0" max="100" value="60">
+          </div>
+
+          <h3 class="peta__sidebar-title" style="margin-top: 0.75rem;"><i class="fas fa-map"></i> Basemap</h3>
+          <div class="basemap-toggle">
+            <button class="basemap-btn active" id="bmLight">Light</button>
+            <button class="basemap-btn" id="bmSatellite">Satelit</button>
+          </div>
+
+          <div style="margin-top:0.75rem;padding:0.55rem 0.65rem;background:var(--surface-alt);border-radius:var(--radius-sm);font-size:0.72rem;color:var(--ink-dim);line-height:1.4;">
+            <i class="fas fa-info-circle" style="color:var(--primary);margin-right:0.25rem;"></i>
+            <strong>Catatan:</strong> Layer vegetasi dan deteksi perubahan (Gain, Loss) terintegrasi penuh menggunakan dataset GeoJSON hasil klasifikasi model Random Forest.
+          </div>
+        </div>
+      </div>
+
+      <!-- Peringkat Prioritas Pemantauan per Zona -->
+      <div class="peta__prioritas-section reveal" style="margin-top: 3.5rem;">
+        <h3 class="peta__prioritas-title" style="font-family: var(--ff-display); font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;"><i class="fas fa-list-ol" style="color: var(--primary); margin-right: 0.5rem;"></i> Peringkat Prioritas Pemantauan Tutupan Vegetasi</h3>
+        <p style="font-size: 0.9rem; color: var(--ink-muted); margin-bottom: 1.5rem;">Peringkat zonasi tingkat urgensi pemantauan dan pengawasan alih fungsi vegetasi di wilayah Ibu Kota Nusantara.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+          
+          <!-- KIPP (Prioritas Utama) -->
+          <div class="vis-card" style="border-top: 4px solid var(--accent-coral);">
+            <div class="vis-card__icon vis-card__icon--coral">
+              <i class="fas fa-building-shield"></i>
+            </div>
+            <h4 class="vis-card__title">1. KIPP — Prioritas Utama</h4>
+            <p class="vis-card__text">
+              <strong>Fokus:</strong> Pembukaan lahan konstruksi fisik Kawasan Inti Pusat Pemerintahan (~5.600 ha). Mengalami laju pembukaan vegetasi tercepat akibat pembangunan infrastruktur utama (Istana, Kementerian, Sumbu Kebangsaan).
+            </p>
+          </div>
+
+          <!-- BWP Buffer (Prioritas Tinggi) -->
+          <div class="vis-card" style="border-top: 4px solid #6366f1;">
+            <div class="vis-card__icon" style="background: rgba(99,102,241,0.15); color: #6366f1;">
+              <i class="fas fa-shield-halved"></i>
+            </div>
+            <h4 class="vis-card__title">2. Zona Penyangga BWP — Prioritas Tinggi</h4>
+            <p class="vis-card__text">
+              <strong>Fokus:</strong> Pengawasan alih fungsi di Bagian Wilayah Perencanaan. Memerlukan kendali tata ruang ketat untuk mencegah ekspansi residensial/komersial tidak terkendali yang dapat mengganggu Sabuk Hijau (Green Belt) kota.
+            </p>
+          </div>
+
+          <!-- Hutan Lindung (Kondisi Terjaga) -->
+          <div class="vis-card" style="border-top: 4px solid var(--primary);">
+            <div class="vis-card__icon vis-card__icon--emerald">
+              <i class="fas fa-tree"></i>
+            </div>
+            <h4 class="vis-card__title">3. Kawasan Hutan Lindung — Kondisi Terjaga</h4>
+            <p class="vis-card__text">
+              <strong>Fokus:</strong> Rehabilitasi kawasan bekas tambang batubara dan lahan kritis. Menjadi jangkar utama untuk merealisasikan visi 75% kawasan hijau berkonsep Forest City melalui penanaman spesies tanaman endemik.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NEW SEKSI 3B: SPLIT-SCREEN SPATIAL COMPARISON CURTAIN (#komparasi)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="komparasi" id="komparasi">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">Komparasi Spasial 2024 vs 2026</span>
+        <h2 class="section-title reveal">Perbandingan Tirai Interaktif (Before vs After)</h2>
+        <p class="section-desc reveal">
+          Geser pegangan slider di bawah ini untuk melihat transisi tutupan lahan dari Komposit Citra Sentinel-2 (April 2024) ke Prediksi Model Random Forest (April 2026).
+        </p>
+      </div>
+
+      <div class="curtain-wrapper reveal" id="curtainWrapper">
+        <span class="curtain-badge curtain-badge--left"><i class="fas fa-satellite"></i> Sentinel-2 True Color (April 2024)</span>
+        <span class="curtain-badge curtain-badge--right"><i class="fas fa-microchip"></i> Prediksi Vegetasi ML (April 2026)</span>
+
+        <div class="curtain-side curtain-side--before">
+          <div class="curtain-overlay-card curtain-overlay-card--right">
+            <div class="curtain-overlay-title">
+              <i class="fas fa-tree"></i> Prediksi Vegetasi (April 2026)
+            </div>
+            <p class="curtain-overlay-desc">
+              Hasil klasifikasi tutupan lahan menggunakan algoritma Random Forest (Akurasi 94,81%). Vegetasi hijau dipetakan dalam warna hijau emerald, sementara non-vegetasi transparan.
+            </p>
+          </div>
+        </div>
+
+        <div class="curtain-side curtain-side--after" id="curtainAfter">
+          <div class="curtain-overlay-card curtain-overlay-card--left">
+            <div class="curtain-overlay-title">
+              <i class="fas fa-satellite"></i> Sentinel-2 Satelit (April 2024)
+            </div>
+            <p class="curtain-overlay-desc">
+              Komposit citra Sentinel-2 True Color (RGB 4-3-2) bebas awan hasil mosaik GEE. Menampilkan kondisi rona riil tutupan lahan di seluruh wilayah IKN (250 ribu hektar).
+            </p>
+          </div>
+        </div>
+
+        <div class="curtain-handle" id="curtainHandle">
+          <div class="curtain-handle__knob">
+            <i class="fas fa-left-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       METODOLOGI (#metodologi) — GEE & Data Processing
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="metodologi" id="metodologi">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">Metodologi & Data Proses</span>
+        <h2 class="section-title reveal">Alur Pemrosesan Google Earth Engine</h2>
+      </div>
+
+      <!-- 4-Step Pipeline Matrix -->
+      <div class="metodologi__steps reveal-stagger">
+        <!-- Step 1 -->
+        <div class="pipeline-step-card reveal">
+          <span class="pipeline-step-num">01</span>
+          <div>
+            <div class="pipeline-step-icon"><i class="fas fa-satellite"></i></div>
+            <h3 class="pipeline-step-title">Akuisisi Citra & SCL Masking</h3>
+            <p class="pipeline-step-desc">
+              Citra Sentinel-2 Level-2A (COPERNICUS/S2_SR_HARMONIZED) disaring untuk AOI IKN. Filtering cloud masking SCL bit 3, 8, 9, 10, 11 untuk eliminasi awan dan bayangan persisten.
+            </p>
+          </div>
+          <div class="pipeline-step-footer">
+            <span><i class="fas fa-filter"></i> SCL Bit Filter</span>
+            <span>2024 vs 2026</span>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="pipeline-step-card reveal">
+          <span class="pipeline-step-num">02</span>
+          <div>
+            <div class="pipeline-step-icon"><i class="fas fa-layer-group"></i></div>
+            <h3 class="pipeline-step-title">Rekayasa Fitur & Indeks Spektral</h3>
+            <p class="pipeline-step-desc">
+              Kalkulasi indeks spektral NDVI (kerapatan vegetasi) dan NDBI (kerapatan lahan terbangun), dikombinasikan dalam 8 stack band masukan (B2, B3, B4, B8, B11, B12, NDVI, NDBI).
+            </p>
+          </div>
+          <div class="pipeline-step-footer">
+            <span><i class="fas fa-calculator"></i> NDVI & NDBI</span>
+            <span>8 Input Bands</span>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="pipeline-step-card reveal">
+          <span class="pipeline-step-num">03</span>
+          <div>
+            <div class="pipeline-step-icon"><i class="fas fa-brain"></i></div>
+            <h3 class="pipeline-step-title">Training Random Forest (100 Trees)</h3>
+            <p class="pipeline-step-desc">
+              Model <code>smileRandomForest(100, 42)</code> dilatih dengan 400 titik sampel observasi terstratifikasi (80/20 split: 323 data training & 77 sampel testing independen).
+            </p>
+          </div>
+          <div class="pipeline-step-footer">
+            <span><i class="fas fa-check-double"></i> 94,81% Akurasi</span>
+            <span>100 Trees (N=42)</span>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="pipeline-step-card reveal">
+          <span class="pipeline-step-num">04</span>
+          <div>
+            <div class="pipeline-step-icon"><i class="fas fa-vector-square"></i></div>
+            <h3 class="pipeline-step-title">Analisis Perubahan & Vektorisasi</h3>
+            <p class="pipeline-step-desc">
+              Operasi bitwise difference antara klasifikasi 2024 dan 2026 untuk mengekstrak poligon Reforestasi (717 Gain Poligon) dan Pembukaan Lahan (242 Loss Poligon KIPP).
+            </p>
+          </div>
+          <div class="pipeline-step-footer">
+            <span><i class="fas fa-chart-line"></i> +12.190,85 ha</span>
+            <span>959 Poligon Vector</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Code & Band Importance Hub -->
+      <div class="metodologi-hub reveal">
+        <!-- Interactive Code Snippets -->
+        <div class="vis-card" style="margin-top: 0; background: var(--surface);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 class="vis-card__title" style="margin: 0;"><i class="fas fa-code" style="color: var(--primary);"></i> Cuplikan Skrip Algoritma GEE</h3>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="metodologiTabs">
+              <button type="button" class="gee-tab-btn active" data-snippet="scl"><i class="fas fa-filter"></i> 1. SCL Masking</button>
+              <button type="button" class="gee-tab-btn" data-snippet="math"><i class="fas fa-calculator"></i> 2. Band Math</button>
+              <button type="button" class="gee-tab-btn" data-snippet="rf"><i class="fas fa-brain"></i> 3. Random Forest</button>
+            </div>
+          </div>
+          <pre class="code-block" id="metodologiCodeBlock" style="min-height: 180px; margin-top: 0.5rem; font-family: monospace; white-space: pre-wrap;"><code>// SCL Cloud & Shadow Masking (Sentinel-2 L2A)
+function maskS2SCL(image) {
+  var scl = image.select('SCL');
+  var mask = scl.neq(3).and(scl.neq(8))
+    .and(scl.neq(9)).and(scl.neq(10))
+    .and(scl.neq(11));
+  return image.updateMask(mask).divide(10000);
+}</code></pre>
+        </div>
+
+        <!-- Random Forest Band Importance Matrix -->
+        <div class="band-importance-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem;">
+            <h3 class="vis-card__title" style="margin: 0;"><i class="fas fa-chart-bar" style="color: var(--primary);"></i> Bobot Kontribusi Fitur (Band Importance)</h3>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); background: var(--primary-surface); padding: 0.25rem 0.6rem; border-radius: 999px;">RF Classifier</span>
+          </div>
+
+          <div class="band-bar-row">
+            <div class="band-bar-label"><span>NDVI (Indeks Vegetasi)</span><span>28.4%</span></div>
+            <div class="band-bar-track"><div class="band-bar-fill" style="width: 28.4%;"></div></div>
+          </div>
+          <div class="band-bar-row">
+            <div class="band-bar-label"><span>B8 (Near-Infrared / NIR)</span><span>22.1%</span></div>
+            <div class="band-bar-track"><div class="band-bar-fill" style="width: 22.1%;"></div></div>
+          </div>
+          <div class="band-bar-row">
+            <div class="band-bar-label"><span>NDBI (Indeks Bangunan)</span><span>16.8%</span></div>
+            <div class="band-bar-track"><div class="band-bar-fill" style="width: 16.8%;"></div></div>
+          </div>
+          <div class="band-bar-row">
+            <div class="band-bar-label"><span>B11 (SWIR-1 / Infra Merah Pendek)</span><span>12.5%</span></div>
+            <div class="band-bar-track"><div class="band-bar-fill" style="width: 12.5%;"></div></div>
+          </div>
+          <div class="band-bar-row">
+            <div class="band-bar-label"><span>B12 (SWIR-2 / Kelembapan Tajuk)</span><span>9.7%</span></div>
+            <div class="band-bar-track"><div class="band-bar-fill" style="width: 9.7%;"></div></div>
+          </div>
+          <div class="band-bar-row" style="margin-bottom: 0;">
+            <div class="band-bar-label"><span>B4 / B3 / B2 (Spektrum Tampak RGB)</span><span>10.5%</span></div>
+            <div class="band-bar-track"><div class="band-bar-fill" style="width: 10.5%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       EVALUASI (#evaluasi) — Confusion Matrix & Metrics
+       ═══════════════════════════════════════════════════════════ -->
+    <section class="evaluasi" id="evaluasi">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">Evaluasi Model Machine Learning</span>
+        <h2 class="section-title reveal">Validasi Akurasi Random Forest</h2>
+      </div>
+
+      <div class="evaluasi__grid">
+        <!-- Left Column -->
+        <div class="evaluasi__left-col">
+          <!-- Card 1: Confusion Matrix -->
+          <div class="vis-card reveal">
+            <h3 class="vis-card__title"><i class="fas fa-table-cells"></i> Confusion Matrix (77 Sampel Testing)</h3>
+            <table class="cm-table" style="margin-top: 1rem;">
+              <thead>
+                <tr>
+                  <th>Aktual \ Prediksi</th>
+                  <th>Non-Vegetasi (0)</th>
+                  <th>Vegetasi (1)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Non-Vegetasi (0)</th>
+                  <td class="cm-tn"><span data-countup="33">33</span> (TN)</td>
+                  <td class="cm-fp"><span data-countup="4">4</span> (FP)</td>
+                </tr>
+                <tr>
+                  <th>Vegetasi (1)</th>
+                  <td class="cm-fn"><span data-countup="0">0</span> (FN)</td>
+                  <td class="cm-tp"><span data-countup="40">40</span> (TP)</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="vis-card__text" style="margin-top: 1rem; font-size: 0.84rem; line-height: 1.5;">
+              <i class="fas fa-circle-info" style="color: var(--accent-cyan);"></i>
+              <strong>Diagnostik Error:</strong> 4 sampel False Positive terjadi pada area vegetasi ringan/semak terbuka yang terklasifikasi sebagai vegetasi karena reflektansi campuran di musim kering April.
+            </p>
+          </div>
+
+          <!-- Card 2: Uji Keandalan Model Formal -->
+          <div class="vis-card reveal">
+            <h3 class="vis-card__title"><i class="fas fa-microscope"></i> Uji Keandalan Model Formal</h3>
+            <div class="math-formula-box">
+              <!-- Wilson Score Row -->
+              <div class="math-row">
+                <div class="math-header">
+                  <span>WILSON SCORE 95% CONFIDENCE INTERVAL (CI)</span>
+                  <span class="math-badge">Akurasi Populasi</span>
+                </div>
+                <div class="math-body">
+                  <div class="math-equation">
+                    <span class="math-var">CI</span><sub>95%</sub> = [87.41%, 98.00%]
+                  </div>
+                  <div class="math-explanation">
+                    Rentang keandalan model pada populasi dengan tingkat kepercayaan 95% (<span class="math-var">n</span> = 77 sampel testing).
+                  </div>
+                </div>
+              </div>
+
+              <!-- McNemar Row -->
+              <div class="math-row">
+                <div class="math-header">
+                  <span>UJI SIMETRI KESALAHAN MCNEMAR</span>
+                  <span class="math-badge">Bias Uji</span>
+                </div>
+                <div class="math-body">
+                  <div class="math-equation">
+                    &chi;<sup>2</sup> = 2.25 &le; &chi;<sup>2</sup><sub>tabel</sub> (3.841)
+                  </div>
+                  <div class="math-explanation">
+                    Nilai <span class="math-var">&chi;<sup>2</sup></span> sebesar 2,25 membuktikan tidak ada bias simetri kesalahan signifikan antara FP dan FN pada taraf <span class="math-var">&alpha;</span> = 0.05.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kappa Row -->
+              <div class="math-row">
+                <div class="math-header">
+                  <span>DEKOMPOSISI KOEFISIEN KAPPA</span>
+                  <span class="math-badge">Kekuatan Model</span>
+                </div>
+                <div class="math-body">
+                  <div class="math-equation">
+                    &kappa; = 0.8955
+                  </div>
+                  <div class="math-explanation">
+                    Observed Agreement (<span class="math-var">P<sub>o</sub></span> = 94.81%) vs Chance Agreement (<span class="math-var">P<sub>e</sub></span> = 49.37%) menghasilkan kesepakatan klasifikasi yang <strong>Sangat Kuat</strong>.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="evaluasi__right-col">
+          <!-- Card 3: Metrics Dashboard -->
+          <div class="vis-card reveal">
+            <h3 class="vis-card__title" style="margin-bottom: 0.5rem;"><i class="fas fa-chart-pie"></i> Metrik Performa & Validasi Model</h3>
+            <p class="vis-card__text" style="font-size: 0.82rem; margin-bottom: 1.25rem;">
+              Metrik hasil komparasi prediksi acak model Random Forest dengan dataset pengujian lapangan independen (testing split).
+            </p>
+
+            <span class="section-label" style="font-size: 0.72rem; color: var(--primary); margin-bottom: 0.75rem;">Metrik Performa Utama</span>
+            <div class="metric-grid" style="margin-bottom: 1.5rem;">
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="94.81" data-suffix="%">94,81%</div>
+                <div class="metric-card__lbl">Overall Accuracy</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="0.8955">0,8955</div>
+                <div class="metric-card__lbl">Kappa Coefficient</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="100" data-suffix="%">100%</div>
+                <div class="metric-card__lbl">Recall (Vegetasi)</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="90.91" data-suffix="%">90,91%</div>
+                <div class="metric-card__lbl">Precision (Vegetasi)</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="0.9524">0.9524</div>
+                <div class="metric-card__lbl">F1-Score</div>
+              </div>
+            </div>
+
+            <span class="section-label" style="font-size: 0.72rem; color: var(--primary); margin-bottom: 0.75rem;">Metrik Turunan & Uji Statistik</span>
+            <div class="metric-grid">
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="89.19" data-suffix="%">89,19%</div>
+                <div class="metric-card__lbl">Specificity</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="100" data-suffix="%">100%</div>
+                <div class="metric-card__lbl">NPV</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="10.81" data-suffix="%">10,81%</div>
+                <div class="metric-card__lbl">FPR</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="0" data-suffix="%">0,00%</div>
+                <div class="metric-card__lbl">FNR</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="94.59" data-suffix="%">94,59%</div>
+                <div class="metric-card__lbl">Balanced Acc.</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__val" data-countup="0.897" data-gradient="">0,897</div>
+                <div class="metric-card__lbl">MCC Score</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       INSIGHT (#insight) — Spatial Analysis & Policy
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="insight" id="insight">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">Insight Hasil & Rekomendasi Kebijakan</span>
+        <h2 class="section-title reveal">Temuan Spasial Kunci & Implikasi Strategis</h2>
+      </div>
+
+      <div class="insight__grid reveal-stagger">
+        <div class="vis-card insight-card--loss reveal">
+          <div class="vis-card__icon vis-card__icon--coral">
+            <i class="fas fa-arrow-trend-down"></i>
+          </div>
+          <h3 class="vis-card__title">Kehilangan Vegetasi</h3>
+          <p class="vis-card__text">
+            <strong>-20.610,92 ha</strong> (242 poligon) terdistribusi terkonsentrasi di sepanjang koridor pembangunan KIPP (Kawasan Inti Pusat Pemerintahan) dan konstruksi jalan tol IKN.
+          </p>
+        </div>
+
+        <div class="vis-card insight-card--gain reveal">
+          <div class="vis-card__icon vis-card__icon--emerald">
+            <i class="fas fa-arrow-trend-up"></i>
+          </div>
+          <h3 class="vis-card__title">Pertambahan Vegetasi</h3>
+          <p class="vis-card__text">
+            <strong>+29.782,80 ha</strong> (717 poligon) mendominasi area reforestasi dan revegetasi bekas lahan tambang/semak di zona penyangga IKN.
+          </p>
+        </div>
+
+        <!-- Portal Pengiriman Laporan Eksekutif Resmi OIKN -->
+        <div class="vis-card insight__full reveal" style="background: #ffffff; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+          <div class="vis-card__icon vis-card__icon--emerald">
+            <i class="fas fa-envelope-open-text"></i>
+          </div>
+          <h3 class="vis-card__title">Pusat Dispensasi Laporan Eksekutif Spasial OIKN</h3>
+          <p class="vis-card__text">
+            Portal pengiriman resmi draf laporan eksekutif analisis tutupan vegetasi Ibu Kota Nusantara. Ditujukan secara resmi kepada Otoritas Ibu Kota Nusantara (<strong>halo@ikn.go.id</strong>) atau alamat email instansi pilihan Anda.
+          </p>
+
+          <div class="email-dispatch-container" style="margin-top: 1.25rem; background: var(--canvas); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+            <!-- Target Email Input Bar -->
+            <div class="email-input-box" style="margin-bottom: 1.25rem;">
+              <label for="targetEmailInput" style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                <i class="fas fa-at" style="color: var(--primary); margin-right: 0.35rem;"></i> Alamat Email Tujuan Laporan
+              </label>
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <input type="email" id="targetEmailInput" value="halo@ikn.go.id" placeholder="Masukkan email tujuan (contoh: halo@ikn.go.id)" style="flex: 1; min-width: 260px; padding: 0.65rem 1rem; font-family: var(--ff-ui); font-size: 0.9rem; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;">
+                <button type="button" id="btnResetEmail" style="background: var(--surface-alt); color: var(--ink-muted); border: 1px solid var(--border); font-family: var(--ff-ui); font-size: 0.8rem; font-weight: 600; padding: 0.65rem 1rem; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.2s ease;">
+                  <i class="fas fa-rotate-left"></i> Reset halo@ikn.go.id
+                </button>
+              </div>
+              <div style="margin-top: 0.5rem; font-size: 0.82rem; color: var(--ink-muted); display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fas fa-link" style="color: var(--primary);"></i>
+                <span>Link Mailto Aktif:</span>
+                <a id="activeMailtoTextLink" href="mailto:halo@ikn.go.id" style="color: var(--primary); font-weight: 700; text-decoration: underline; word-break: break-all;">mailto:halo@ikn.go.id</a>
+              </div>
+            </div>
+
+            <!-- Official Letter Document Box -->
+            <div class="letter-document-box" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-sm); position: relative;">
+              <!-- Header / Kop Surat -->
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 1rem; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                  <img src="public/logo-nusantara.png" alt="Logo IKN" style="width: 44px; height: 44px; object-fit: contain;">
+                  <div>
+                    <div style="font-family: var(--ff-display); font-size: 1.05rem; font-weight: 700; color: var(--ink); line-height: 1.2;">OTORITAS IBU KOTA NUSANTARA</div>
+                    <div style="font-family: var(--ff-ui); font-size: 0.72rem; font-weight: 600; color: var(--ink-muted); letter-spacing: 0.05em; text-transform: uppercase;">Tim Peneliti Kapita Selekta SI × Maha Data — Universitas Bakrie</div>
+                  </div>
+                </div>
+                <div style="text-align: right; font-size: 0.78rem; color: var(--ink-dim);">
+                  <div style="font-family: var(--ff-ui); font-weight: 700; color: var(--primary);">NOMOR: 660.1/OIKN/LAP-SPASIAL/IV/2026</div>
+                  <div>Tanggal: 20 April 2026</div>
+                </div>
+              </div>
+
+              <!-- Letter Metadata -->
+              <div style="font-size: 0.85rem; color: var(--ink-body); line-height: 1.6; margin-bottom: 1rem;">
+                <div><strong>Kepada Yth.</strong></div>
+                <div><strong>Otoritas Ibu Kota Nusantara (OIKN)</strong></div>
+                <div>u.p. Tim Analisis Lingkungan & Command Center Spasial OIKN</div>
+                <div>Email: <span id="letterRecipientLabel" style="color: var(--primary); font-weight: 700;">halo@ikn.go.id</span></div>
+              </div>
+
+              <div style="font-size: 0.88rem; font-weight: 700; color: var(--ink); margin-bottom: 1rem; border-left: 3px solid var(--primary); padding-left: 0.65rem;">
+                PERIHAL: LAPORAN EKSEKUTIF PEMANTAUAN SPASIOTEMPORAL TUTUPAN VEGETASI IKN (PERIODE APRIL 2024 – APRIL 2026)
+              </div>
+
+              <!-- Formal Letter Content -->
+              <div id="letterBodyContent" style="font-size: 0.84rem; color: var(--ink-body); line-height: 1.65; background: var(--surface-alt); padding: 1.15rem; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.05); font-family: var(--ff-ui);">
+                Dengan hormat,<br><br>
+                Bersama ini kami sampaikan laporan eksekutif hasil analisis spasiotemporal perubahan tutupan vegetasi di Kawasan Ibu Kota Nusantara (AOI 196.986,16 ha) menggunakan citra satelit Sentinel-2 (Copernicus) dan model machine learning Random Forest (100 Trees):<br><br>
+                <strong>1. RINGKASAN METRIK SPASIAL UTAMA:</strong><br>
+                • <strong>Total Luas Wilayah AOI:</strong> 196.986,16 ha<br>
+                • <strong>Baseline Vegetasi (April 2024):</strong> 184.795,31 ha (93,81%)<br>
+                • <strong>Prediksi Vegetasi (April 2026):</strong> 196.986,16 ha (100,00% Terkover)<br>
+                • <strong>Pertumbuhan Bersih (Net Change):</strong> +12.190,85 ha (+6,60%)<br>
+                • <strong>Penambahan Vegetasi (Gain):</strong> +29.782,80 ha (717 Poligon Reforestasi)<br>
+                • <strong>Pembukaan Lahan (Loss):</strong> -20.610,92 ha (242 Poligon Konstruksi KIPP)<br><br>
+                <strong>2. EVALUASI AKURASI & UJI KEANDALAN MODEL:</strong><br>
+                • <strong>Overall Accuracy:</strong> 94,81% (73 dari 77 sampel testing independen)<br>
+                • <strong>Koefisien Kappa (&kappa;):</strong> 0,8955 (Tingkat reliabilitas sangat kuat)<br>
+                • <strong>Wilson Score 95% CI:</strong> Rentang akurasi populasi [87,41%, 98,00%]<br>
+                • <strong>Uji McNemar (&chi;&sup2;):</strong> 2,25 &le; 3,841 (Bebas bias kesalahan simetris)<br><br>
+                <strong>3. KESIMPULAN REKOMENDASI KEBIJAKAN:</strong><br>
+                Pertumbuhan bersih vegetasi (+12.190,85 ha) mengonfirmasi bahwa laju penghijauan di zona penyangga melebihi pembukaan lahan di KIPP, sehingga komitmen <strong>75% Green Forest City IKN TERJAGA</strong>.<br><br>
+                Demikian laporan eksekutif ini disampaikan untuk memperkuat dasar pengambilan keputusan tata ruang Otoritas Ibu Kota Nusantara.<br><br>
+                Hormat Kami,<br>
+                <strong>Tim Peneliti Kapita Selekta SI &times; Maha Data</strong><br>
+                Universitas Bakrie
+              </div>
+
+              <!-- Dispatch Action Buttons -->
+              <div style="margin-top: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <a id="btnSendMailto" href="mailto:halo@ikn.go.id" style="background: var(--primary); color: #fff; text-decoration: none; font-family: var(--ff-ui); font-size: 0.85rem; font-weight: 700; padding: 0.7rem 1.4rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s ease, transform var(--dur-press) ease; box-shadow: var(--shadow-sm);">
+                  <i class="fas fa-paper-plane"></i> Kirim via Email (mailto:)
+                </a>
+                <button type="button" id="btnCopyLetter" style="background: var(--surface); color: var(--ink); border: 1px solid var(--border); font-family: var(--ff-ui); font-size: 0.85rem; font-weight: 700; padding: 0.7rem 1.25rem; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s ease;">
+                  <i class="fas fa-copy"></i> Salin Draf Surat
+                </button>
+                <button type="button" id="btnSimulateEmail" style="background: var(--surface-alt); color: var(--primary-dark); border: 1px solid rgba(5,150,105,0.2); font-family: var(--ff-ui); font-size: 0.85rem; font-weight: 700; padding: 0.7rem 1.25rem; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s ease;">
+                  <i class="fas fa-paper-plane"></i> Simulasikan Pengiriman Direct
+                </button>
+              </div>
+
+              <div id="emailStatusMsg" style="font-size: 0.82rem; font-weight: 600; color: var(--primary); margin-top: 0.75rem; display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NEW SEKSI 6B: KALKULATOR REFORESTASI & KARBON 2030 (#kalkulator)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="kalkulator" id="kalkulator">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">Simulasi Kebijakan OIKN 2030</span>
+        <h2 class="section-title reveal">Kalkulator Proyeksi Reforestasi & Sekuestrasi Karbon</h2>
+        <p class="section-desc reveal">
+          Geser slider di bawah ini untuk mensimulasikan tambahan target reforestasi kawasan IKN dan secara instan menghitung proyeksi penyerapan CO₂ serta persentase capaian kawasan hijau.
+        </p>
+      </div>
+
+      <div class="calc-card reveal">
+        <div class="calc-slider-box">
+          <div class="calc-slider-label">
+            <span>Target Tambahan Reforestasi (ha)</span>
+            <span class="calc-slider-val" id="calcSliderVal">+15.000 ha</span>
+          </div>
+          <input type="range" class="calc-range-input" id="calcInputSlider" min="1000" max="50000" step="1000" value="15000">
+        </div>
+
+        <div class="calc-metrics-grid">
+          <div class="calc-metric-card">
+            <div class="calc-metric-val" id="calcValCarbon">217.500 ton</div>
+            <div class="calc-metric-lbl">Proyeksi Serapan CO₂ / Tahun</div>
+          </div>
+
+          <div class="calc-metric-card">
+            <div class="calc-metric-val" id="calcValGreen">82,6%</div>
+            <div class="calc-metric-lbl">Proyeksi Total Area Hijau IKN</div>
+          </div>
+
+          <div class="calc-metric-card">
+            <div class="calc-metric-val" id="calcValTrees">16,5 Juta</div>
+            <div class="calc-metric-lbl">Estimasi Bibit Pohon Dibutuhkan</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
+          <button id="btnSaveCalc" style="background: var(--primary); color: #fff; border: none; font-family: var(--ff-ui); font-size: 0.85rem; font-weight: 700; padding: 0.75rem 1.5rem; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s ease, transform var(--dur-press) ease;">
+            <i class="fas fa-bookmark"></i> Simpan Skenario OIKN 2030
+          </button>
+          <span id="calcToastMsg" style="font-size: 0.82rem; font-weight: 600; color: var(--primary); display: none;"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TIM & ROADMAP (#tim)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="tim" id="tim">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">TIM PENELITI — KELOMPOK 5</span>
+        <h2 class="section-title reveal">Universitas Bakrie — Kapita Selekta SI × Maha Data</h2>
+      </div>
+
+      <div class="tim__grid reveal-stagger">
+        <!-- Card 1: Najma Khonsa Tsabita -->
+        <div class="person-card reveal">
+          <div>
+            <div class="person-card__avatar">
+              <img src="public/foto-najma.jpeg" alt="Najma Khonsa Tsabita" class="person-card__avatar-img">
+            </div>
+            <h3 class="person-card__name">Najma Khonsa Tsabita</h3>
+            <p class="person-card__role">Ground Truth Collection & Preprocessing Citra</p>
+          </div>
+          <span class="person-card__tag">Data Prep & GT</span>
+        </div>
+
+        <!-- Card 2: Agnesia Nadya Tassi -->
+        <div class="person-card reveal">
+          <div>
+            <div class="person-card__avatar">
+              <img src="public/foto-agnes.jpeg" alt="Agnesia Nadya Tassi" class="person-card__avatar-img">
+            </div>
+            <h3 class="person-card__name">Agnesia Nadya Tassi</h3>
+            <p class="person-card__role">Ground Truth Collection & Preprocessing Citra</p>
+          </div>
+          <span class="person-card__tag">Data Prep & GT</span>
+        </div>
+
+        <!-- Card 3: Fadel Setiawan Arifin -->
+        <div class="person-card reveal">
+          <div>
+            <div class="person-card__avatar">
+              <img src="public/foto-fadel.jpg" alt="Fadel Setiawan Arifin" class="person-card__avatar-img">
+            </div>
+            <h3 class="person-card__name">Fadel Setiawan Arifin</h3>
+            <p class="person-card__role">Model Training Random Forest & Evaluasi Metrik</p>
+          </div>
+          <span class="person-card__tag">Random Forest</span>
+        </div>
+
+        <!-- Card 4: Chalimatus Sa'Diyyah -->
+        <div class="person-card reveal">
+          <div>
+            <div class="person-card__avatar">
+              <img src="public/foto-cacha.png" alt="Chalimatus Sa'Diyyah" class="person-card__avatar-img">
+            </div>
+            <h3 class="person-card__name">Chalimatus Sa'Diyyah</h3>
+            <p class="person-card__role">Model Training Random Forest & Evaluasi Metrik</p>
+          </div>
+          <span class="person-card__tag">Random Forest</span>
+        </div>
+
+
+        <!-- Card 5: Muhammad Ridho Azfa Karani (Featured Lead Dev) -->
+        <div class="person-card person-card--lead reveal">
+          <div>
+            <div class="person-card__avatar">
+              <img src="public/ridho-azfa.jpeg" alt="Muhammad Ridho Azfa Karani" class="person-card__avatar-img">
+              <span class="person-card__badge-lead">LEAD DEV</span>
+            </div>
+            <h3 class="person-card__name">Muhammad Ridho Azfa Karani</h3>
+            <p class="person-card__role">Pengembang WebGIS & Custom Enterprise Portal</p>
+          </div>
+          <span class="person-card__tag" style="background: rgba(5,150,105,0.1); color: var(--primary); border-color: rgba(5,150,105,0.3);">WebGIS Architect</span>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--section-gap);">
+        <div class="section-header--center">
+          <span class="section-label reveal">Rencana Riset Masa Depan</span>
+          <h2 class="section-title reveal">Roadmap Pengembangan Lanjutan</h2>
+        </div>
+
+        <div class="roadmap__grid reveal-stagger">
+          <!-- Card 1: Sentinel-1 SAR -->
+          <div class="roadmap-card reveal" style="--card-accent: #0284c7;">
+            <div>
+              <div class="roadmap-card__top">
+                <span class="roadmap-card__badge" style="--badge-bg: rgba(2, 132, 199, 0.08); --badge-color: #0284c7; --badge-border: rgba(2, 132, 199, 0.25);">
+                  <i class="fas fa-clock"></i> FASE 01 • Q3 2026
+                </span>
+                <div class="roadmap-card__icon" style="--icon-bg: rgba(2, 132, 199, 0.1); --icon-color: #0284c7;">
+                  <i class="fas fa-satellite"></i>
+                </div>
+              </div>
+              <h3 class="roadmap-card__title">Sentinel-1 SAR Radar</h3>
+              <div class="roadmap-card__subtitle">Penetrator Awan & Musim Hujan Tropis</div>
+              <p class="roadmap-card__desc">
+                Integrasi citra radar polarisasi ganda VV/VH Sentinel-1 C-Band dengan perataan spekel Refined Lee untuk menembus tutupan awan persisten di Kalimantan saat musim hujan.
+              </p>
+              <div class="roadmap-card__tags">
+                <span class="roadmap-tag">VV/VH Dual-Pol</span>
+                <span class="roadmap-tag">C-Band SAR</span>
+                <span class="roadmap-tag">Refined Lee Filter</span>
+                <span class="roadmap-tag">All-Weather</span>
+              </div>
+            </div>
+            <div class="roadmap-card__footer">
+              <span class="roadmap-card__target-label">Target Aksesibilitas</span>
+              <span class="roadmap-card__target-val" style="color: #0284c7;">100% Bebas Awan</span>
+            </div>
+          </div>
+
+          <!-- Card 2: UAV LiDAR & Biomassa -->
+          <div class="roadmap-card reveal" style="--card-accent: #059669;">
+            <div>
+              <div class="roadmap-card__top">
+                <span class="roadmap-card__badge" style="--badge-bg: rgba(5, 150, 105, 0.08); --badge-color: #059669; --badge-border: rgba(5, 150, 105, 0.25);">
+                  <i class="fas fa-clock"></i> FASE 02 • Q1 2027
+                </span>
+                <div class="roadmap-card__icon" style="--icon-bg: rgba(5, 150, 105, 0.1); --icon-color: #059669;">
+                  <i class="fas fa-helicopter"></i>
+                </div>
+              </div>
+              <h3 class="roadmap-card__title">UAV LiDAR Biomassa</h3>
+              <div class="roadmap-card__subtitle">Estimasi Stok Karbon & Tajuk 3D</div>
+              <p class="roadmap-card__desc">
+                Pemodelan Above-Ground Biomass (AGB) dan stok karbon IKN menggunakan point cloud LiDAR 3D resolusi tinggi (&lt; 0.5m) dan persamaan allometrik spesifik spesies.
+              </p>
+              <div class="roadmap-card__tags">
+                <span class="roadmap-tag">LiDAR 3D Point Cloud</span>
+                <span class="roadmap-tag">AGB Allometric</span>
+                <span class="roadmap-tag">&lt; 0.5m UAV</span>
+                <span class="roadmap-tag">Carbon Stock</span>
+              </div>
+            </div>
+            <div class="roadmap-card__footer">
+              <span class="roadmap-card__target-label">Akurasi Model Biomassa</span>
+              <span class="roadmap-card__target-val" style="color: #059669;">Estimasi R² &gt; 0,92</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Time Series Fenologi -->
+          <div class="roadmap-card reveal" style="--card-accent: #d97706;">
+            <div>
+              <div class="roadmap-card__top">
+                <span class="roadmap-card__badge" style="--badge-bg: rgba(217, 119, 6, 0.08); --badge-color: #d97706; --badge-border: rgba(217, 119, 6, 0.25);">
+                  <i class="fas fa-clock"></i> FASE 03 • Q4 2027
+                </span>
+                <div class="roadmap-card__icon" style="--icon-bg: rgba(217, 119, 6, 0.1); --icon-color: #d97706;">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+              </div>
+              <h3 class="roadmap-card__title">Time Series Fenologi</h3>
+              <div class="roadmap-card__subtitle">Bimonthly Trend & EWS Real-Time</div>
+              <p class="roadmap-card__desc">
+                Analisis deret waktu multi-temporal (Bimonthly Composites) dengan fit harmonik BFAST untuk memantau fluktuasi fenologi musiman dan memicu peringatan dini alih fungsi lahan.
+              </p>
+              <div class="roadmap-card__tags">
+                <span class="roadmap-tag">Monthly BFAST</span>
+                <span class="roadmap-tag">Harmonic Fit</span>
+                <span class="roadmap-tag">Automated EWS</span>
+                <span class="roadmap-tag">Real-Time</span>
+              </div>
+            </div>
+            <div class="roadmap-card__footer">
+              <span class="roadmap-card__target-label">Latensi EWS Alert</span>
+              <span class="roadmap-card__target-val" style="color: #d97706;">&lt; 24 Jam Kirim WA/Email</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NEW SEKSI 9: OPEN DATA & API DEVELOPER HUB (#opendata)
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="opendata" id="opendata">
+    <div class="container">
+      <div class="section-header--center">
+        <span class="section-label reveal">Sains Terbuka & Unduh Data</span>
+        <h2 class="section-title reveal">Open Data & API Developer Hub</h2>
+        <p class="section-desc reveal">
+          Unduh dataset mentah, poligon hasil klasifikasi, dan skrip Google Earth Engine untuk transparansi riset dan reproduksi analisis spasial.
+        </p>
+      </div>
+
+      <!-- Tab Control Buttons -->
+      <div class="opendata-tabs reveal">
+        <button class="opendata-tab-btn active" data-tab="spatial">
+          <i class="fas fa-map-marked-alt"></i> Batas Spasial
+        </button>
+        <button class="opendata-tab-btn" data-tab="classification">
+          <i class="fas fa-layer-group"></i> Hasil Klasifikasi
+        </button>
+        <button class="opendata-tab-btn" data-tab="groundtruth">
+          <i class="fas fa-map-pin"></i> Ground Truth
+        </button>
+        <button class="opendata-tab-btn" data-tab="stats-code">
+          <i class="fas fa-chart-line"></i> Statistik & Kode GEE
+        </button>
+      </div>
+
+      <!-- TAB 1: BATAS SPASIAL -->
+      <div class="opendata-tab-content active" id="tab-spatial">
+        <div class="opendata__grid">
+          <!-- Batas IKN 250K -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-draw-polygon"></i></div>
+              <h3 class="data-card__title">Batas IKN 250K</h3>
+              <p class="data-card__desc">Batas delineasi AOI IKN 250.000 ha — poligon batas resmi dari OIKN.</p>
+            </div>
+            <a class="data-card__btn" href="../data/batas_ikn_250k.geojson" download="batas_ikn_250k.geojson">
+              <i class="fas fa-download"></i> GeoJSON (254 KB)
+            </a>
+          </div>
+
+          <!-- BWP 50K -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-border-all"></i></div>
+              <h3 class="data-card__title">BWP Delineation 50K</h3>
+              <p class="data-card__desc">Bagian Wilayah Perencanaan (BWP) IKN seluas ~50.000 ha (skala 1:50.000).</p>
+            </div>
+            <a class="data-card__btn" href="../data/boundary_bwp_50k.geojson" download="boundary_bwp_50k.geojson">
+              <i class="fas fa-download"></i> GeoJSON (2.7 MB)
+            </a>
+          </div>
+
+          <!-- KIPP Delineation 5K -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-city"></i></div>
+              <h3 class="data-card__title">KIPP Delineation 5K</h3>
+              <p class="data-card__desc">Batas Kawasan Inti Pusat Pemerintahan (KIPP) IKN seluas ~6.671 ha.</p>
+            </div>
+            <a class="data-card__btn" href="../data/kipp_delineation.geojson" download="kipp_delineation.geojson">
+              <i class="fas fa-download"></i> GeoJSON (3.4 KB)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: HASIL KLASIFIKASI & PERUBAHAN -->
+      <div class="opendata-tab-content" id="tab-classification">
+        <div class="opendata__grid">
+          <!-- Tutupan Vegetasi 2024 -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-tree"></i></div>
+              <h3 class="data-card__title">Vegetasi April 2024</h3>
+              <p class="data-card__desc">Hasil klasifikasi tutupan vegetasi hijau baseline April 2024.</p>
+            </div>
+            <a class="data-card__btn" href="../data/vegetasi_2024.geojson" download="vegetasi_2024.geojson">
+              <i class="fas fa-download"></i> GeoJSON (103 KB)
+            </a>
+          </div>
+
+          <!-- Tutupan Vegetasi 2026 -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-seedling"></i></div>
+              <h3 class="data-card__title">Vegetasi April 2026</h3>
+              <p class="data-card__desc">Hasil klasifikasi prediksi tutupan vegetasi hijau April 2026.</p>
+            </div>
+            <a class="data-card__btn" href="../data/vegetasi_2026.geojson" download="vegetasi_2026.geojson">
+              <i class="fas fa-download"></i> GeoJSON (111 KB)
+            </a>
+          </div>
+
+          <!-- Gain Vegetasi -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-circle-up" style="color: var(--primary);"></i></div>
+              <h3 class="data-card__title">Gain Vegetasi (Reforestasi)</h3>
+              <p class="data-card__desc">Poligon deteksi pertambahan vegetasi baru / penghijauan kembali (+29.782 ha).</p>
+            </div>
+            <a class="data-card__btn" href="../data/gain_vegetasi.geojson" download="gain_vegetasi.geojson">
+              <i class="fas fa-download"></i> GeoJSON (96 KB)
+            </a>
+          </div>
+
+          <!-- Loss Vegetasi -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-circle-down" style="color: #ef4444;"></i></div>
+              <h3 class="data-card__title">Loss Vegetasi (Deforestasi)</h3>
+              <p class="data-card__desc">Poligon deteksi kehilangan vegetasi / pembukaan konstruksi fisik (-20.610 ha).</p>
+            </div>
+            <a class="data-card__btn" href="../data/loss_vegetasi.geojson" download="loss_vegetasi.geojson">
+              <i class="fas fa-download"></i> GeoJSON (93 KB)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: GROUND TRUTH & SAMPEL -->
+      <div class="opendata-tab-content" id="tab-groundtruth">
+        <div class="opendata__grid">
+          <!-- Ground Truth Points GeoJSON -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-location-crosshairs"></i></div>
+              <h3 class="data-card__title">Ground Truth Points</h3>
+              <p class="data-card__desc">400 titik sampel spasial terstratifikasi (NDVI, NDBI, class, year).</p>
+            </div>
+            <a class="data-card__btn" href="../data/ground_truth_points.geojson" download="ground_truth_points.geojson">
+              <i class="fas fa-download"></i> GeoJSON (80 KB)
+            </a>
+          </div>
+
+          <!-- Ground Truth CSV Dataset -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-file-excel"></i></div>
+              <h3 class="data-card__title">Ground Truth Dataset (CSV)</h3>
+              <p class="data-card__desc">Dataset tabular 400 titik sampel lengkap dengan tanda kelas lapangan.</p>
+            </div>
+            <a class="data-card__btn" href="../data/ground_truth_ikn_2024_2026.csv" download="ground_truth_ikn_2024_2026.csv">
+              <i class="fas fa-file-csv"></i> CSV (75 KB)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: STATISTIK & KODE GEE -->
+      <div class="opendata-tab-content" id="tab-stats-code">
+        <div class="opendata__grid">
+          <!-- Confusion Matrix CSV -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-table-list"></i></div>
+              <h3 class="data-card__title">Confusion Matrix CSV</h3>
+              <p class="data-card__desc">Matriks evaluasi model 2x2 untuk 77 titik data pengujian independen.</p>
+            </div>
+            <a class="data-card__btn" href="../results/Confusion_Matrix.csv" download="Confusion_Matrix.csv">
+              <i class="fas fa-file-csv"></i> CSV (66 B)
+            </a>
+          </div>
+
+          <!-- Summary Statistik CSV -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-file-waveform"></i></div>
+              <h3 class="data-card__title">Ringkasan Statistik IKN</h3>
+              <p class="data-card__desc">Ringkasan luas baseline, prediksi, gain, loss, net change, dan parameter ML.</p>
+            </div>
+            <a class="data-card__btn" href="../results/Summary_Statistik_IKN_2024_2026.csv" download="Summary_Statistik_IKN_2024_2026.csv">
+              <i class="fas fa-file-csv"></i> CSV (1 KB)
+            </a>
+          </div>
+
+          <!-- Indikator Area JSON -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-square-poll-vertical"></i></div>
+              <h3 class="data-card__title">Metrik Evaluasi & Area JSON</h3>
+              <p class="data-card__desc">Objek data JSON terstruktur berisi seluruh metrik model statistik spasial.</p>
+            </div>
+            <a class="data-card__btn" href="../results/stats_ikn.json" download="stats_ikn.json">
+              <i class="fas fa-download"></i> JSON (731 B)
+            </a>
+          </div>
+
+          <!-- Zone Summary JSON -->
+          <div class="data-card reveal">
+            <div>
+              <div class="data-card__icon"><i class="fas fa-chart-pie"></i></div>
+              <h3 class="data-card__title">Zone Breakdown JSON</h3>
+              <p class="data-card__desc">Breakdown statistik luas tutupan vegetasi terperinci per zona administrasi IKN.</p>
+            </div>
+            <a class="data-card__btn" href="../results/zone_summary.json" download="zone_summary.json">
+              <i class="fas fa-download"></i> JSON (1 KB)
+            </a>
+          </div>
+
+          <!-- GEE Script Code Hub -->
+          <div class="data-card reveal" style="grid-column: 1 / -1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; width: 100%;">
+              <div style="flex: 1; text-align: left;">
+                <div class="data-card__icon" style="margin-bottom: 0.5rem;"><i class="fas fa-code"></i></div>
+                <h3 class="data-card__title" style="margin-bottom: 0.25rem;">Skrip Klasifikasi GEE (Google Earth Engine)</h3>
+                <p class="data-card__desc" style="margin-bottom: 0;">Skrip lengkap smileRandomForest (100 Trees) dengan filter mask Scene Classification (SCL).</p>
+              </div>
+              <div style="display: flex; gap: 0.75rem;">
+                <a class="data-card__btn" href="gee/main_script.js" download="main_script.js" style="background: var(--surface-alt); color: var(--ink); border: 1px solid var(--border);">
+                  <i class="fas fa-download"></i> Unduh File .js
+                </a>
+                <button class="data-card__btn" id="btnCopyGEEScript">
+                  <i class="fas fa-copy"></i> Salin Skrip GEE
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="container">
+      <p style="margin-bottom: 0.5rem; line-height: 1.6;">
+        © 2026 Ibu Kota Nusantara — Kapita Selekta SI × Maha Data, Universitas Bakrie
+        &nbsp;•&nbsp;
+        <a href="https://github.com/najmakhonsa/ikn-vegetation-analysis" target="_blank" rel="noopener">
+          <i class="fab fa-github"></i> Repository
+        </a>
+        &nbsp;•&nbsp;
+        Powered by <a href="https://codaxiom.com" target="_blank" rel="noopener">Codaxiom</a>
+      </p>
+    </div>
+    <div class="footer-mark" aria-hidden="true">Ibu Kota Nusantara</div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCRIPTS — Leaflet, GSAP ScrollTrigger, CX Runtime
+       ═══════════════════════════════════════════════════════════ -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════
+     CX — Codaxiom Shell Runtime (IKN Light)
+     ═══════════════════════════════════════════════════════════ */
+  (function () {
+    'use strict';
+    window.CX = window.CX || {};
+
+    /* ── CX.makeScrubLoop (rAF lerp, frame-quantized seeking) ── */
+    CX.makeScrubLoop = function (video, maxTime, fps) {
+      var step    = 1 / (fps || 24);
+      var CATCH_UP = 14;
+      var target   = 0.01;
+      var displayed = 0.01;
+      var lastTs   = 0;
+      var rafId    = null;
+
+      function tick(ts) {
+        rafId = requestAnimationFrame(tick);
+        if (!lastTs) lastTs = ts;
+        var dt = Math.min(0.05, (ts - lastTs) / 1000);
+        lastTs = ts;
+        var k = 1 - Math.exp(-dt * CATCH_UP);
+        displayed += (target - displayed) * k;
+        if (Math.abs(target - displayed) < 0.25 * step) displayed = target;
+        if (!video.seeking) {
+          var delta = Math.abs(video.currentTime - displayed);
+          if (delta > 0.5 * step) {
+            var q = Math.round(displayed / step) * step;
+            q = Math.min(maxTime, Math.max(0.01, q));
+            try { video.currentTime = q; } catch (e) {}
+          }
+        }
+      }
+
+      return {
+        setTarget: function (t) { target = Math.min(maxTime, Math.max(0, t)); },
+        start: function () { if (rafId === null) { lastTs = 0; rafId = requestAnimationFrame(tick); } },
+        stop:  function () { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; } }
+      };
+    };
+
+    /* ── Topbar settle-on-scroll (hidden while in hero, slides down smoothly when scrolling past hero) ── */
+    var topbar = document.getElementById('topbar');
+    function checkTopbar() {
+      if (!topbar) return;
+      var tentang = document.getElementById('tentang');
+      if (tentang) {
+        var rect = tentang.getBoundingClientRect();
+        topbar.classList.toggle('scrolled', rect.top <= window.innerHeight * 0.85);
+      } else {
+        topbar.classList.toggle('scrolled', window.scrollY > window.innerHeight * 0.8);
+      }
+    }
+    window.addEventListener('scroll', checkTopbar, { passive: true });
+    checkTopbar();
+
+    /* ── Mobile nav toggle & resize reset ── */
+    var toggle = document.getElementById('topbarToggle');
+    var mobileNav = document.getElementById('mobileNav');
+    if (toggle && mobileNav) {
+      toggle.addEventListener('click', function () {
+        var open = mobileNav.classList.toggle('open');
+        toggle.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      });
+      mobileNav.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          mobileNav.classList.remove('open');
+          toggle.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        });
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 900 && mobileNav.classList.contains('open')) {
+          mobileNav.classList.remove('open');
+          toggle.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+      });
+    }
+
+    /* ── Scrollspy traveler ── */
+    CX.initScrollspy = function () {
+      var links    = document.querySelectorAll('.topbar__link[data-section]');
+      var traveler = document.getElementById('topbarTraveler');
+      if (!links.length || !traveler) return;
+
+      function update() {
+        var active = null;
+        links.forEach(function (link) {
+          var sec = document.getElementById(link.dataset.section);
+          if (!sec) return;
+          var rect = sec.getBoundingClientRect();
+          if (rect.top <= 120 && rect.bottom > 120) active = link;
+        });
+
+        links.forEach(function (l) { l.classList.remove('active'); });
+        if (active) {
+          active.classList.add('active');
+          var rect = active.getBoundingClientRect();
+          var navRect = active.parentElement.getBoundingClientRect();
+
+          if (window.gsap) {
+            gsap.to(traveler, {
+              x: rect.left - navRect.left,
+              width: rect.width,
+              autoAlpha: 1,
+              duration: 0.45,
+              ease: 'power3.out',
+              overwrite: 'auto'
+            });
+          } else {
+            traveler.style.transform = 'translateX(' + (rect.left - navRect.left) + 'px)';
+            traveler.style.width = rect.width + 'px';
+            traveler.style.opacity = '1';
+          }
+        } else {
+          traveler.style.opacity = '0';
+        }
+      }
+
+      window.addEventListener('scroll', update, { passive: true });
+      update();
+    };
+
+    /* ── Scroll Reveal (Intersection Observer) ── */
+    CX.initReveal = function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!els.length) return;
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      els.forEach(function (el) { observer.observe(el); });
+    };
+
+    /* ── Count-Up Animation (data-countup & data-count support) ── */
+    CX.initCountUp = function () {
+      var items = document.querySelectorAll('[data-countup], [data-count]');
+      if (!items.length) return;
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var el = entry.target;
+          observer.unobserve(el);
+
+          var valStr = el.dataset.countup || el.dataset.count;
+          var raw = parseFloat(valStr);
+          if (isNaN(raw)) return;
+
+          var prefix = el.dataset.prefix || '';
+          var suffix = el.dataset.suffix || '';
+          var isFloat = raw % 1 !== 0;
+          var duration = 1200;
+          var start = performance.now();
+
+          function step(now) {
+            var elapsed = now - start;
+            var progress = Math.min(elapsed / duration, 1);
+            var ease = 1 - (1 - progress) * (1 - progress);
+            var current = raw * ease;
+
+            if (isFloat && raw < 1) {
+              el.textContent = prefix + current.toFixed(4).replace('.', ',') + suffix;
+            } else if (isFloat) {
+              el.textContent = prefix + current.toFixed(2).replace('.', ',') + suffix;
+            } else {
+              el.textContent = prefix + Math.round(current).toLocaleString('id-ID') + suffix;
+            }
+
+            if (progress < 1) requestAnimationFrame(step);
+          }
+
+          requestAnimationFrame(step);
+        });
+      }, { threshold: 0.3 });
+
+      items.forEach(function (el) { observer.observe(el); });
+    };
+
+    /* ── Email Dispatcher Init (halo@ikn.go.id & Custom Target Email) ── */
+    CX.initEmailDispatcher = function () {
+      var input = document.getElementById('targetEmailInput');
+      var btnReset = document.getElementById('btnResetEmail');
+      var labelRecipient = document.getElementById('letterRecipientLabel');
+      var btnMailto = document.getElementById('btnSendMailto');
+      var textLinkMailto = document.getElementById('activeMailtoTextLink');
+      var btnCopy = document.getElementById('btnCopyLetter');
+      var btnSimulate = document.getElementById('btnSimulateEmail');
+      var statusMsg = document.getElementById('emailStatusMsg');
+      if (!input || !btnMailto) return;
+
+      var defaultEmail = 'halo@ikn.go.id';
+
+      function generateMailtoBody(recipient) {
+        var bodyLines = [
+          'Kepada Yth. Otoritas Ibu Kota Nusantara (OIKN)',
+          'Email Target: ' + recipient,
+          '',
+          'PERIHAL: LAPORAN EKSEKUTIF PEMANTAUAN SPASIOTEMPORAL TUTUPAN VEGETASI IKN (PERIODE APRIL 2024 – APRIL 2026)',
+          '',
+          'Dengan hormat,',
+          '',
+          'Bersama ini kami sampaikan laporan eksekutif hasil analisis spasiotemporal perubahan tutupan vegetasi di Kawasan Ibu Kota Nusantara (AOI 196.986,16 ha) berbasis Sentinel-2 dan Random Forest:',
+          '',
+          '1. RINGKASAN METRIK SPASIAL UTAMA:',
+          '• Total Luas Wilayah AOI: 196.986,16 ha',
+          '• Baseline Vegetasi (April 2024): 184.795,31 ha (93,81%)',
+          '• Prediksi Vegetasi (April 2026): 196.986,16 ha (100,00% Terkover)',
+          '• Pertumbuhan Bersih (Net Change): +12.190,85 ha (+6,60%)',
+          '• Penambahan Vegetasi (Gain): +29.782,80 ha (717 Poligon Reforestasi)',
+          '• Pembukaan Lahan (Loss): -20.610,92 ha (242 Poligon Konstruksi KIPP)',
+          '',
+          '2. EVALUASI AKURASI & UJI KEANDALAN MODEL:',
+          '• Overall Accuracy: 94,81% (73/77 sampel testing)',
+          '• Koefisien Kappa (κ): 0,8955 (Tingkat reliabilitas sangat kuat)',
+          '• Wilson Score 95% CI: [87,41%, 98,00%]',
+          '• Uji McNemar (χ²): 2,25 ≤ 3,841',
+          '',
+          '3. REKOMENDASI KEBIJAKAN:',
+          'Pertumbuhan bersih vegetasi (+12.190,85 ha) mengonfirmasi bahwa laju penghijauan di zona penyangga melebihi pembukaan lahan di KIPP, sehingga komitmen 75% Green Forest City IKN TERJAGA.',
+          '',
+          'Hormat Kami,',
+          'Tim Peneliti Kapita Selekta SI × Maha Data — Universitas Bakrie'
+        ];
+        return encodeURIComponent(bodyLines.join('\r\n'));
+      }
+
+      function updateMailtoLink() {
+        var recipient = (input.value || defaultEmail).trim();
+        if (!recipient) recipient = defaultEmail;
+
+        if (labelRecipient) labelRecipient.textContent = recipient;
+
+        var subject = encodeURIComponent('LAPORAN EKSEKUTIF PEMANTAUAN SPASIOTEMPORAL TUTUPAN VEGETASI IKN (2024-2026)');
+        var body = generateMailtoBody(recipient);
+        var mailtoUrl = 'mailto:' + recipient + '?subject=' + subject + '&body=' + body;
+
+        btnMailto.setAttribute('href', mailtoUrl);
+        btnMailto.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Surat Resmi ke ' + recipient;
+
+        if (textLinkMailto) {
+          textLinkMailto.href = mailtoUrl;
+          textLinkMailto.textContent = 'mailto:' + recipient;
+        }
+      }
+
+      // Guard: Prevent Enter key from triggering accidental submission
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          updateMailtoLink();
+        }
+      });
+
+      input.addEventListener('input', updateMailtoLink);
+      updateMailtoLink();
+
+      if (btnReset) {
+        btnReset.addEventListener('click', function () {
+          input.value = defaultEmail;
+          updateMailtoLink();
+        });
+      }
+
+      if (btnCopy && statusMsg) {
+        btnCopy.addEventListener('click', function () {
+          var letterEl = document.getElementById('letterBodyContent');
+          var textToCopy = letterEl ? letterEl.innerText : '';
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(textToCopy).then(function () {
+              statusMsg.style.display = 'inline-block';
+              statusMsg.style.color = '#059669';
+              statusMsg.textContent = '✓ Draf Surat Resmi Terdaftar Tersalin ke Clipboard!';
+              setTimeout(function () { statusMsg.style.display = 'none'; }, 3500);
+            });
+          }
+        });
+      }
+
+      if (btnSimulate && statusMsg) {
+        btnSimulate.addEventListener('click', function () {
+          var recipient = (input.value || defaultEmail).trim();
+          
+          // Safeguard: Block sending simulated emails to the official OIKN domain and subdomains to prevent spam
+          var emailDomain = (recipient.split('@').pop() || '').toLowerCase().trim();
+          if (emailDomain === 'ikn.go.id' || emailDomain.slice(-10) === '.ikn.go.id') {
+            statusMsg.style.display = 'inline-block';
+            statusMsg.style.color = '#ef4444';
+            statusMsg.textContent = '❌ Pengiriman simulasi langsung ke domain resmi Otoritas IKN (@ikn.go.id) tidak diizinkan demi keamanan. Silakan gunakan alamat email pribadi Anda (e.g. Gmail).';
+            setTimeout(function () {
+              statusMsg.style.display = 'none';
+            }, 6000);
+            return;
+          }
+
+          btnSimulate.disabled = true;
+          btnSimulate.style.opacity = '0.7';
+          statusMsg.style.display = 'inline-block';
+          statusMsg.style.color = 'var(--ink-muted)';
+          statusMsg.textContent = 'Mengirimkan laporan eksekutif ke ' + recipient + '...';
+
+          // Simulated email delivery (Decoupled from Codaxiom backend platform for public standalone deployment)
+          setTimeout(function () {
+            statusMsg.style.color = '#059669';
+            statusMsg.textContent = '✓ [SIMULASI] Laporan Eksekutif Resmi Berhasil Dikirimkan ke ' + recipient + '!';
+            btnSimulate.disabled = false;
+            btnSimulate.style.opacity = '1';
+            setTimeout(function () {
+              statusMsg.style.display = 'none';
+            }, 5000);
+          }, 1500);
+        });
+      }
+    };
+
+    /* ── Boot hero video scrub ── */
+    CX.initHeroScrub = function () {
+      var video = document.getElementById('heroVideo');
+      var hero  = document.getElementById('hero');
+      if (!video || !hero) return;
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        video.pause();
+        try { video.currentTime = 0.01; } catch (e) {}
+        return;
+      }
+
+      function buildScrub() {
+        var rawDur  = (video && isFinite(video.duration) && video.duration > 0) ? video.duration : 10;
+        var maxTime = Math.max(0.1, rawDur - 0.08);
+
+        if (!window.gsap || !window.ScrollTrigger) {
+          video.loop = true;
+          video.play().catch(function () {});
+          return;
+        }
+
+        gsap.registerPlugin(ScrollTrigger);
+        var loop = CX.makeScrubLoop(video, maxTime, 24);
+
+        video.pause();
+        try { video.currentTime = 0.01; } catch (e) {}
+        loop.setTarget(0.01);
+
+        var proxy = { t: 0.01 };
+
+        var heroTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: hero,
+            start: 'top top',
+            end: '+=100%',
+            scrub: 0.5,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+            onToggle: function (self) {
+              if (self.isActive) loop.start(); else loop.stop();
+            }
+          }
+        });
+
+        /* Video scrub 0s -> 10s over 0.0 -> 0.75 of scroll */
+        heroTl.to(proxy, {
+          t: maxTime, ease: 'none', duration: 0.75,
+          onUpdate: function () { loop.setTarget(proxy.t); }
+        }, 0);
+
+        /* Content reveal 0.05 -> 0.45 */
+        heroTl
+          .from('.hero__badge', { autoAlpha: 0, y: 24, duration: 0.12 }, 0.05)
+          .from('.hero__title', { autoAlpha: 0, y: 36, duration: 0.20 }, 0.10)
+          .from('.hero__sub', { autoAlpha: 0, y: 24, duration: 0.16 }, 0.22)
+          .from('.hero__stats .hero__stat', { autoAlpha: 0, y: 20, stagger: 0.04, duration: 0.14 }, 0.30);
+
+        /* Exit fadeout of hero content before unpin 0.75 -> 1.00 */
+        heroTl
+          .to('.hero__content', { autoAlpha: 0, y: -40, duration: 0.25, ease: 'power1.in' }, 0.75)
+          .to('.hero__scroll-cue', { autoAlpha: 0, duration: 0.1 }, 0.75);
+
+        /* Scroll cue click handler */
+        var cue = document.getElementById('heroScrollCue');
+        if (cue) {
+          cue.addEventListener('click', function () {
+            var tentang = document.getElementById('tentang');
+            if (tentang) tentang.scrollIntoView({ behavior: 'smooth' });
+          });
+        }
+
+        loop.start();
+      }
+
+      if (video.readyState >= 1) {
+        buildScrub();
+      } else {
+        var whenMeta = new Promise(function (res) {
+          video.addEventListener('loadedmetadata', res, { once: true });
+          setTimeout(res, 3000);
+        });
+        whenMeta.then(buildScrub);
+      }
+    };
+
+    /* ── Leaflet Map Init (Real GeoJSON from repo data/) ── */
+    CX.initMap = function () {
+      var mapEl = document.getElementById('mapLeaflet');
+      if (!mapEl) return;
+
+      var map = L.map('mapLeaflet', {
+        center: [-0.89, 116.85],
+        zoom: 10,
+        zoomControl: true,
+        maxZoom: 18,
+        minZoom: 8
+      });
+
+      /* ── Basemap Tiles ── */
+      var lightTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a> | Data: Tim Riset IKN — Univ. Bakrie',
+        maxZoom: 19
+      }).addTo(map);
+
+      var satTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri | Data: Tim Riset IKN — Univ. Bakrie',
+        maxZoom: 19
+      });
+
+      /* ── Basemap Toggle ── */
+      var bmLight = document.getElementById('bmLight');
+      var bmSat   = document.getElementById('bmSatellite');
+      if (bmLight && bmSat) {
+        bmLight.addEventListener('click', function () {
+          map.removeLayer(satTile); lightTile.addTo(map);
+          bmLight.classList.add('active'); bmSat.classList.remove('active');
+        });
+        bmSat.addEventListener('click', function () {
+          map.removeLayer(lightTile); satTile.addTo(map);
+          bmSat.classList.add('active'); bmLight.classList.remove('active');
+        });
+      }
+
+      /* ── Layer Registry ── */
+      var layers = {};
+      var layerLoadStatus = {};
+
+      /* ── Helper: Fetch GeoJSON and create layer ── */
+      function loadGeoJSON(url, id, styleOpts, popupFn, addToMap) {
+        layerLoadStatus[id] = 'loading';
+        fetch(url)
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var layer = L.geoJSON(data, {
+              style: function (feature) {
+                var baseStyle = typeof styleOpts === 'function' ? styleOpts(feature) : Object.assign({}, styleOpts);
+                /* Dynamically map layer ID to its opacity slider */
+                var layerSliderMap = {
+                  layerVeg2024: 'opVeg2024',
+                  layerVeg2026: 'opVeg2026',
+                  layerGain:    'opGain',
+                  layerLoss:    'opLoss'
+                };
+                var sliderId = layerSliderMap[id];
+                if (sliderId) {
+                  var slider = document.getElementById(sliderId);
+                  if (slider) {
+                    baseStyle.fillOpacity = (slider.value / 100) * 0.5;
+                  }
+                }
+                return baseStyle;
+              },
+              pointToLayer: styleOpts.pointToLayer || null,
+              onEachFeature: popupFn ? function (feature, layer) {
+                layer.bindPopup(popupFn(feature));
+              } : null
+            });
+            layers[id] = layer;
+            layerLoadStatus[id] = 'loaded';
+            
+            /* Only add to map if the checkbox is checked at load-completion time */
+            var cb = document.getElementById(id);
+            if (cb && cb.checked) {
+              layer.addTo(map);
+            }
+          })
+          .catch(function (err) {
+            console.warn('GeoJSON load failed for ' + id + ':', err);
+            layerLoadStatus[id] = 'error';
+          });
+      }
+
+      /* ═══════════ BOUNDARY LAYERS (Real Shapefiles → GeoJSON) ═══════════ */
+
+      /* IKN 250K Full Boundary */
+      loadGeoJSON('../data/boundary_ikn_250k.geojson', 'layerBoundary', {
+        color: '#0d9488', weight: 2.5, dashArray: '8, 6',
+        fillColor: '#0d9488', fillOpacity: 0.03
+      }, function (f) {
+        var area = f.properties.luas ? (Number(f.properties.luas).toLocaleString('id-ID', {maximumFractionDigits: 2}) + ' ha') : '256.142,75 ha';
+        return '<strong>Batas Delineasi IKN 250K</strong><br>Total Area: ' + area + '<br>Keterangan: ' + (f.properties.KET || 'IKN Kaltim') + '<br>Sumber: OIKN Boundary Dataset';
+      }, true);
+
+      /* BWP 50K Zones (6 planning zones) */
+      var bwpColors = ['#6366f1','#8b5cf6','#a855f7','#7c3aed','#4f46e5','#6d28d9'];
+      loadGeoJSON('../data/boundary_bwp_50k.geojson', 'layerBWP', function (feature) {
+        var idx = feature.properties.FID_1 ? (feature.properties.FID_1 % 6) : 0;
+        return {
+          color: bwpColors[idx], weight: 2, fillColor: bwpColors[idx],
+          fillOpacity: 0.08, dashArray: '4, 4'
+        };
+      }, function (f) {
+        var p = f.properties;
+        var name = p.ROMAWI || 'Zona BWP';
+        var desc = p.KETERANGAN || 'Rencana Tata Ruang';
+        var area = p.LUAS_HA ? (Number(p.LUAS_HA).toLocaleString('id-ID', {maximumFractionDigits: 2}) + ' ha') : 'N/A';
+        return '<strong>BWP IKN 50K</strong><br>' +
+          'Zona: ' + name + '<br>' +
+          'Peruntukan: ' + desc + '<br>' +
+          'Luas: ' + area;
+      }, false);
+
+      /* KIPP Inti 5K Core Government Zone */
+      loadGeoJSON('../data/boundary_kipp_5k.geojson', 'layerKIPP', {
+        color: '#dc2626', weight: 2.5, fillColor: '#dc2626',
+        fillOpacity: 0.12, dashArray: '2, 4'
+      }, function (f) {
+        var area = f.properties.luas ? (Number(f.properties.luas).toLocaleString('id-ID', {maximumFractionDigits: 2}) + ' ha') : '5.644,39 ha';
+        return '<strong>KIPP — Kawasan Inti Pusat Pemerintahan</strong><br>Area Inti: ' + area + '<br>SK Penunjukan: ' + (f.properties.SK_PNJK || '942/Menhut-II/2013') + '<br>Tanggal: ' + (f.properties.TGL_PNJK || '2013-12-23');
+      }, false);
+
+      /* ═══════════ GROUND TRUTH POINTS (400 sample points) ═══════════ */
+      loadGeoJSON('../data/ground_truth_points.geojson', 'layerGroundTruth', {
+        pointToLayer: function (feature, latlng) {
+          var isVeg = feature.properties.class === 1;
+          return L.circleMarker(latlng, {
+            radius: 5,
+            fillColor: isVeg ? '#059669' : '#f59e0b',
+            color: isVeg ? '#047857' : '#d97706',
+            weight: 1.5,
+            fillOpacity: 0.8
+          });
+        }
+      }, function (f) {
+        var p = f.properties;
+        var cls = p.class === 1 ? 'Vegetasi (Target)' : 'Non-Vegetasi';
+        return '<strong>Ground Truth #' + p.id + '</strong><br>' +
+          'Kelas: <span style="color:' + (p.class === 1 ? '#059669' : '#f59e0b') + ';font-weight:700;">' + cls + '</span><br>' +
+          'Tahun: ' + p.year + '<br>' +
+          'NDVI: ' + p.NDVI.toFixed(4) + '<br>' +
+          'NDBI: ' + p.NDBI.toFixed(4);
+      }, false);
+
+      /* ═══════════ CLASSIFICATION & CHANGE LAYERS (Real GeoJSON) ═══════════ */
+
+      /* Tutupan Vegetasi April 2024 */
+      loadGeoJSON('../data/building_2024.geojson', 'layerVeg2024', {
+        color: '#047857', weight: 1.2, fillColor: '#047857',
+        fillOpacity: 0.28
+      }, function (f) {
+        return '<strong>Tutupan Vegetasi April 2024</strong><br>Klasifikasi: Vegetasi Hutan/Tumbuhan<br>Metode: Sentinel-2 L2A + Random Forest (100 Trees)<br>Overall Accuracy: 94.8%';
+      }, true);
+
+      /* Tutupan Vegetasi April 2026 */
+      loadGeoJSON('../data/building_2026.geojson', 'layerVeg2026', {
+        color: '#059669', weight: 1.2, fillColor: '#059669',
+        fillOpacity: 0.28
+      }, function (f) {
+        return '<strong>Tutupan Vegetasi April 2026</strong><br>Klasifikasi: Vegetasi Hutan/Tumbuhan<br>Metode: Sentinel-2 L2A + Random Forest (100 Trees)<br>Kappa Coefficient: 0.896';
+      }, true);
+
+      /* Area Gain (Reforestasi) */
+      loadGeoJSON('../data/change_gain.geojson', 'layerGain', {
+        color: '#0284c7', weight: 1.5, fillColor: '#0284c7',
+        fillOpacity: 0.35
+      }, function (f) {
+        return '<strong>Pertambahan Vegetasi (Gain)</strong><br>Area Baru / Suksesi Alam / Reforestasi';
+      }, false);
+
+      /* Area Loss (Deforestasi) */
+      loadGeoJSON('../data/change_loss.geojson', 'layerLoss', {
+        color: '#dc2626', weight: 1.5, fillColor: '#dc2626',
+        fillOpacity: 0.40
+      }, function (f) {
+        return '<strong>Pengurangan Vegetasi (Loss)</strong><br>Area Pembukaan Lahan / Infrastruktur Baru / Deforestasi';
+      }, false);
+
+      /* ═══════════ CHECKBOX TOGGLE WIRING ═══════════ */
+      var allLayerIds = ['layerBoundary','layerBWP','layerKIPP','layerGroundTruth',
+                         'layerVeg2024','layerVeg2026','layerGain','layerLoss'];
+
+      allLayerIds.forEach(function (id) {
+        var cb = document.getElementById(id);
+        if (!cb) return;
+        cb.addEventListener('change', function () {
+          var layer = layers[id];
+          if (!layer) return;
+          if (cb.checked) {
+            layer.addTo(map);
+          } else {
+            map.removeLayer(layer);
+          }
+        });
+      });
+
+      /* ═══════════ OPACITY SLIDERS ═══════════ */
+      var sliderMap = {
+        opVeg2024: 'layerVeg2024',
+        opVeg2026: 'layerVeg2026',
+        opGain:    'layerGain',
+        opLoss:    'layerLoss'
+      };
+
+      Object.keys(sliderMap).forEach(function (sliderId) {
+        var slider = document.getElementById(sliderId);
+        if (!slider) return;
+        slider.addEventListener('input', function () {
+          var layer = layers[sliderMap[sliderId]];
+          if (layer && layer.setStyle) {
+            layer.setStyle({ fillOpacity: slider.value / 100 * 0.5 });
+          }
+        });
+      });
+
+      /* ═══════════ MAP READY: Auto-invalidate size & fit bounds ═══════════ */
+      function tryFitBounds() {
+        map.invalidateSize();
+        if (layers['layerBoundary'] && layerLoadStatus['layerBoundary'] === 'loaded') {
+          try {
+            map.fitBounds(layers['layerBoundary'].getBounds(), { padding: [30, 30], maxZoom: 11 });
+          } catch (e) { /* bounds might be invalid */ }
+        } else {
+          /* Retry until boundary is loaded (max 10 attempts) */
+          if (!tryFitBounds._attempts) tryFitBounds._attempts = 0;
+          tryFitBounds._attempts++;
+          if (tryFitBounds._attempts < 10) {
+            setTimeout(tryFitBounds, 500);
+          }
+        }
+      }
+
+      var petaSec = document.getElementById('peta');
+      if (petaSec && 'IntersectionObserver' in window) {
+        var mapObs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              setTimeout(tryFitBounds, 200);
+              mapObs.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.1 });
+        mapObs.observe(petaSec);
+      } else {
+        setTimeout(tryFitBounds, 500);
+      }
+
+      /* Also try fitting immediately after a short delay (for fast connections) */
+      setTimeout(tryFitBounds, 1500);
+
+      /* ── Scale Control ── */
+      L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+    };
+
+    /* ── Preloader Boot Sequencer (2 Seconds) ── */
+    CX.initPreloader = function () {
+      var preloader = document.getElementById('preloader');
+      var bar       = document.getElementById('preloaderBar');
+      if (!preloader) return;
+
+      document.body.style.overflow = 'hidden';
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        preloader.classList.add('fade-out');
+        preloader.style.display = 'none';
+        document.body.style.overflow = '';
+        return;
+      }
+
+      setTimeout(function () {
+        if (bar) bar.style.width = '100%';
+      }, 40);
+
+      setTimeout(function () {
+        preloader.classList.add('fade-out');
+        document.body.style.overflow = '';
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+
+        setTimeout(function () {
+          preloader.style.display = 'none';
+          if (preloader.parentNode) {
+            try { preloader.parentNode.removeChild(preloader); } catch (e) {}
+          }
+          if (window.ScrollTrigger) ScrollTrigger.refresh();
+        }, 550);
+      }, 2000);
+    };
+
+    /* Refresh ScrollTrigger on window load to handle late images/styles */
+    window.addEventListener('load', function () {
+      if (window.ScrollTrigger) {
+        ScrollTrigger.refresh();
+      }
+    });
+
+    /* Recalculate and snap pin spacers when returned to the absolute top of the page */
+    window.addEventListener('scroll', function () {
+      if (window.scrollY === 0) {
+        if (window.ScrollTrigger) {
+          ScrollTrigger.refresh();
+        }
+      }
+    }, { passive: true });
+
+    /* ── CX.initCurtain (Split-Screen Curtain Drag Logic) ── */
+    CX.initCurtain = function () {
+      var wrapper = document.getElementById('curtainWrapper');
+      var handle = document.getElementById('curtainHandle');
+      var after = document.getElementById('curtainAfter');
+      if (!wrapper || !handle || !after) return;
+
+      var isDragging = false;
+
+      function updatePos(x) {
+        var rect = wrapper.getBoundingClientRect();
+        var pos = (x - rect.left) / rect.width;
+        if (pos < 0.05) pos = 0.05;
+        if (pos > 0.95) pos = 0.95;
+        var pct = pos * 100;
+        after.style.width = (100 - pct) + '%';
+        handle.style.left = pct + '%';
+      }
+
+      handle.addEventListener('mousedown', function (e) { isDragging = true; e.preventDefault(); });
+      window.addEventListener('mouseup', function () { isDragging = false; });
+      window.addEventListener('mousemove', function (e) { if (isDragging) updatePos(e.clientX); });
+
+      handle.addEventListener('touchstart', function () { isDragging = true; }, { passive: true });
+      window.addEventListener('touchend', function () { isDragging = false; });
+      window.addEventListener('touchmove', function (e) {
+        if (isDragging && e.touches[0]) updatePos(e.touches[0].clientX);
+      }, { passive: true });
+    };
+
+    /* ── CX.initCalculator (Carbon & Reforestation Simulator) ── */
+    CX.initCalculator = function () {
+      var slider = document.getElementById('calcInputSlider');
+      var labelVal = document.getElementById('calcSliderVal');
+      var valCarbon = document.getElementById('calcValCarbon');
+      var valGreen = document.getElementById('calcValGreen');
+      var valTrees = document.getElementById('calcValTrees');
+      var btnSave = document.getElementById('btnSaveCalc');
+      var toastMsg = document.getElementById('calcToastMsg');
+      if (!slider) return;
+
+      function updateCalc() {
+        var ha = parseInt(slider.value, 10);
+        if (labelVal) labelVal.textContent = '+' + ha.toLocaleString('id-ID') + ' ha';
+
+        var carbon = Math.round(ha * 14.5);
+        if (valCarbon) valCarbon.textContent = carbon.toLocaleString('id-ID') + ' ton';
+
+        var greenPct = (76.9 + (ha / 256142.75) * 100).toFixed(1);
+        if (valGreen) valGreen.textContent = greenPct.replace('.', ',') + '%';
+
+        var treesM = ((ha * 1100) / 1000000).toFixed(1);
+        if (valTrees) valTrees.textContent = treesM.replace('.', ',') + ' Juta';
+      }
+
+      slider.addEventListener('input', updateCalc);
+      updateCalc();
+
+      if (btnSave && toastMsg) {
+        btnSave.addEventListener('click', function () {
+          toastMsg.style.display = 'inline';
+          toastMsg.textContent = '✓ Skenario Reforestasi Tersimpan!';
+          setTimeout(function () { toastMsg.style.display = 'none'; }, 3000);
+        });
+      }
+    };
+
+    /* ── Metodologi Interactive Code Snippets Tabs ── */
+    CX.initMetodologiTabs = function () {
+      var tabContainer = document.getElementById('metodologiTabs');
+      var codeDisplay = document.getElementById('metodologiCodeBlock');
+      if (!tabContainer || !codeDisplay) return;
+
+      var snippets = {
+        scl: "// SCL Cloud & Shadow Masking (Sentinel-2 L2A)\nfunction maskS2SCL(image) {\n  var scl = image.select('SCL');\n  var mask = scl.neq(3).and(scl.neq(8))\n    .and(scl.neq(9)).and(scl.neq(10))\n    .and(scl.neq(11));\n  return image.updateMask(mask).divide(10000);\n}",
+        math: "// Indeks Spektral NDVI & NDBI + 8 Input Bands Stack\nvar ndvi = img.normalizedDifference(['B8', 'B4']).rename('NDVI');\nvar ndbi = img.normalizedDifference(['B11', 'B8']).rename('NDBI');\n\nvar bands = ['B2', 'B3', 'B4', 'B8', 'B11', 'B12', 'NDVI', 'NDBI'];\nvar imageStacked = img.addBands([ndvi, ndbi]).select(bands);",
+        rf: "// Training Random Forest (100 Trees, Seed 42)\nvar classifier = ee.Classifier.smileRandomForest(100, 42)\n  .train({\n    features: trainingSample,\n    classProperty: 'landcover',\n    inputProperties: bands\n  });\n\nvar classified = imageStacked.classify(classifier);"
+      };
+
+      var btns = tabContainer.querySelectorAll('.gee-tab-btn');
+      btns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          btns.forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var key = btn.getAttribute('data-snippet');
+          if (snippets[key]) {
+            codeDisplay.textContent = snippets[key];
+          }
+        });
+      });
+    };
+
+    /* ── CX.initOpenDataHub (GEE Copy Script & Tabs Navigation) ── */
+    CX.initOpenDataHub = function () {
+      // 1. Tab switching logic
+      var tabButtons = document.querySelectorAll('.opendata-tab-btn');
+      var tabContents = document.querySelectorAll('.opendata-tab-content');
+      
+      tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var targetTab = btn.getAttribute('data-tab');
+          
+          tabButtons.forEach(function (b) { b.classList.remove('active'); });
+          tabContents.forEach(function (c) { c.classList.remove('active'); });
+          
+          btn.classList.add('active');
+          var targetEl = document.getElementById('tab-' + targetTab);
+          if (targetEl) targetEl.classList.add('active');
+        });
+      });
+
+      // 2. GEE Copy script logic
+      var btnCopy = document.getElementById('btnCopyGEEScript');
+      if (!btnCopy) return;
+
+      var geeScriptText = `// GEE Script — Vegetation Analysis IKN 2024 vs 2026\nvar ikn = ee.FeatureCollection('projects/kapita-500202/assets/IKN_250K');\nfunction maskS2SCL(img) {\n  var scl = img.select('SCL');\n  return img.updateMask(scl.neq(3).and(scl.neq(8)).and(scl.neq(9)).and(scl.neq(10)).and(scl.neq(11))).divide(10000);\n}\nvar bands = ['B2','B3','B4','B8','B11','B12','NDVI','NDBI'];\nvar rf = ee.Classifier.smileRandomForest(100, 42).train({features: training, classProperty: 'landcover', inputProperties: bands});`;
+
+      btnCopy.addEventListener('click', function () {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(geeScriptText).then(function () {
+            btnCopy.innerHTML = '<i class="fas fa-check"></i> Skrip GEE Tersalin!';
+            setTimeout(function () { btnCopy.innerHTML = '<i class="fas fa-copy"></i> Salin Skrip GEE'; }, 2500);
+          });
+        } else {
+          alert('Skrip GEE:\n' + geeScriptText);
+        }
+      });
+    };
+
+    /* ── Safe Boot Sequencer & Preloader Failsafe ── */
+    function bootApp() {
+      try { CX.initPreloader(); } catch (e) { console.warn('Preloader init error:', e); }
+      try { CX.initScrollspy(); } catch (e) { console.warn('Scrollspy init error:', e); }
+      try { CX.initReveal(); } catch (e) { console.warn('Reveal init error:', e); }
+      try { CX.initCountUp(); } catch (e) { console.warn('CountUp init error:', e); }
+      try { CX.initEmailDispatcher(); } catch (e) { console.warn('EmailDispatcher init error:', e); }
+      try { CX.initMap(); } catch (e) { console.warn('Map init error:', e); }
+      try { CX.initCurtain(); } catch (e) { console.warn('Curtain init error:', e); }
+      try { CX.initCalculator(); } catch (e) { console.warn('Calculator init error:', e); }
+      try { CX.initMetodologiTabs(); } catch (e) {}
+      try { CX.initOpenDataHub(); } catch (e) { console.warn('OpenDataHub init error:', e); }
+
+      var heroTries = 0;
+      function tryHero() {
+        if (window.gsap && window.ScrollTrigger) {
+          try { CX.initHeroScrub(); } catch (e) { console.warn('Hero scrub error:', e); }
+        } else if (heroTries < 50) {
+          heroTries++;
+          setTimeout(tryHero, 100);
+        } else {
+          var v = document.getElementById('heroVideo');
+          if (v) { v.loop = true; v.play().catch(function () {}); }
+        }
+      }
+      tryHero();
+    }
+
+    /* Absolute Hard Failsafe: Remove preloader after max 2.5 seconds no matter what */
+    setTimeout(function () {
+      var p = document.getElementById('preloader');
+      if (p && !p.classList.contains('fade-out')) {
+        p.classList.add('fade-out');
+        document.body.style.overflow = '';
+        setTimeout(function () {
+          p.style.display = 'none';
+          if (p.parentNode) try { p.parentNode.removeChild(p); } catch (e) {}
+        }, 550);
+      }
+    }, 2500);
+
+    /* Safe readyState boot trigger */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootApp);
+    } else {
+      bootApp();
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+Parameter,Nilai,Satuan,Deskripsi
+Luas Wilayah AOI IKN,196986.16,ha,Batas wilayah pemantauan
+Luas Vegetasi April 2024,184795.31,ha,Kondisi vegetasi baseline
+Luas Vegetasi April 2026,196986.16,ha,Prediksi vegetasi setelah pemantauan
+Pertumbuhan Bersih (Net Change),12190.85,ha,Selisih pertumbuhan vegetasi bersih
+Pertambahan Vegetasi (Gain),29782.80,ha,Area penghijauan kembali (Reforestasi)
+Kehilangan Vegetasi (Loss),20610.92,ha,Area pembukaan lahan (Deforestasi)
+Jumlah Poligon Gain,717,poligon,Total poligon deteksi penambahan vegetasi
+Jumlah Poligon Loss,242,poligon,Total poligon deteksi pengurangan vegetasi
+Overall Accuracy,94.81,%,Akurasi keseluruhan klasifikasi Random Forest
+Koefisien Kappa,0.8955,,Ukuran keandalan model klasifikasi
