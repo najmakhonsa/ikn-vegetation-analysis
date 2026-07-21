@@ -3,10 +3,10 @@
   "period_1": "2024",
   "period_2": "2026",
   "built_up_area_2024_ha": 184795.31,
-  "built_up_area_2026_ha": 196986.16,
+  "built_up_area_2026_ha": 257227.60,
   "change_gain_ha": 29782.80,
   "change_loss_ha": 20610.92,
-  "net_change_ha": 12190.85,
+  "net_change_ha": 72432.29,
   "gain_polygon_count": 717,
   "loss_polygon_count": 242,
   "model_evaluation": {
