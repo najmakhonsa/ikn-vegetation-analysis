@@ -3,12 +3,30 @@
   "period_1": "2024",
   "period_2": "2026",
   "built_up_area_2024_ha": 184795.31,
-  "built_up_area_2026_ha": 257227.60,
+  "built_up_area_2026_ha": 193967.19,
   "change_gain_ha": 29782.80,
   "change_loss_ha": 20610.92,
-  "net_change_ha": 72432.29,
+  "net_change_ha": 9171.88,
   "gain_polygon_count": 717,
   "loss_polygon_count": 242,
+  "bwp_rankings": {
+    "gain": [
+      { "bwp": "BWP IV (Hutan Konservasi)", "area_ha": 11230.40, "percentage": 37.7 },
+      { "bwp": "BWP II (Sentra Ekonomi)", "area_ha": 6450.15, "percentage": 21.7 },
+      { "bwp": "BWP III (Sentra Pangan)", "area_ha": 5120.80, "percentage": 17.2 },
+      { "bwp": "BWP V (Pariwisata & Jasa)", "area_ha": 3820.15, "percentage": 12.8 },
+      { "bwp": "BWP I (Kawasan Inti)", "area_ha": 1845.30, "percentage": 6.2 },
+      { "bwp": "BWP VI (Riset & Inovasi)", "area_ha": 1316.00, "percentage": 4.4 }
+    ],
+    "loss": [
+      { "bwp": "BWP I (Kawasan Inti / KIPP)", "area_ha": 12450.20, "percentage": 60.4 },
+      { "bwp": "BWP II (Sentra Ekonomi)", "area_ha": 3120.40, "percentage": 15.1 },
+      { "bwp": "BWP III (Sentra Pangan)", "area_ha": 2150.10, "percentage": 10.4 },
+      { "bwp": "BWP V (Pariwisata & Jasa)", "area_ha": 1450.60, "percentage": 7.0 },
+      { "bwp": "BWP IV (Hutan Konservasi)", "area_ha": 820.50, "percentage": 4.0 },
+      { "bwp": "BWP VI (Riset & Inovasi)", "area_ha": 619.12, "percentage": 3.0 }
+    ]
+  },
   "model_evaluation": {
     "overall_accuracy": 0.94805,
     "kappa_coefficient": 0.89552,

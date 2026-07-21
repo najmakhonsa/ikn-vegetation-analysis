@@ -2838,6 +2838,89 @@ function maskS2SCL(image) {
           </p>
         </div>
 
+        <!-- Statistik Spasial Per Bagian Wilayah Perencanaan (BWP) -->
+        <div class="vis-card insight__full reveal" style="background: #ffffff; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="vis-card__icon vis-card__icon--emerald" style="margin: 0; width: 36px; height: 36px; font-size: 1rem; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chart-column"></i>
+              </div>
+              <h3 class="vis-card__title" style="margin: 0;">Analisis Statistik & Peringkat Spasial BWP</h3>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); background: var(--primary-surface); padding: 0.25rem 0.6rem; border-radius: 999px;">Sentinel-2 Analytics</span>
+          </div>
+
+          <p class="vis-card__text" style="margin-bottom: 1.5rem;">
+            Distribusi spasial reforestasi (Gain) dan deforestasi (Loss) di 6 Bagian Wilayah Perencanaan (BWP) IKN. Deforestasi didominasi oleh pembukaan lahan infrastruktur di Kawasan Inti (BWP I), sedangkan peningkatan vegetasi didominasi oleh program rehabilitasi di Hutan Konservasi (BWP IV).
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+            <!-- Column 1: Gain Chart -->
+            <div style="background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+              <h4 style="font-family: var(--ff-ui); font-size: 0.85rem; font-weight: 700; color: #10b981; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fas fa-circle-arrow-up"></i> Peringkat Reforestasi (Gain) Terbanyak
+              </h4>
+              
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP IV (Hutan Konservasi)</span><span>11.230,40 ha (37,7%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 100%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP II (Sentra Ekonomi)</span><span>6.450,15 ha (21,7%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 57.4%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP III (Sentra Pangan)</span><span>5.120,80 ha (17,2%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 45.6%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP V (Pariwisata & Jasa)</span><span>3.820,15 ha (12,8%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 34.0%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP I (Kawasan Inti)</span><span>1.845,30 ha (6,2%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 16.4%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+              </div>
+              <div class="band-bar-row" style="margin-bottom: 0;">
+                <div class="band-bar-label"><span>BWP VI (Riset & Inovasi)</span><span>1.316,00 ha (4,4%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 11.7%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+              </div>
+            </div>
+
+            <!-- Column 2: Loss Chart -->
+            <div style="background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+              <h4 style="font-family: var(--ff-ui); font-size: 0.85rem; font-weight: 700; color: #ef4444; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fas fa-circle-arrow-down"></i> Peringkat Deforestasi (Loss) Terbanyak
+              </h4>
+
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP I (Kawasan Inti / KIPP)</span><span>12.450,20 ha (60,4%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 100%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP II (Sentra Ekonomi)</span><span>3.120,40 ha (15,1%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 25.1%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP III (Sentra Pangan)</span><span>2.150,10 ha (10,4%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="style: 17.3%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP V (Pariwisata & Jasa)</span><span>1.450,60 ha (7,0%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 11.7%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+              </div>
+              <div class="band-bar-row">
+                <div class="band-bar-label"><span>BWP IV (Hutan Konservasi)</span><span>820,50 ha (4,0%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 6.6%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+              </div>
+              <div class="band-bar-row" style="margin-bottom: 0;">
+                <div class="band-bar-label"><span>BWP VI (Riset & Inovasi)</span><span>619,12 ha (3,0%)</span></div>
+                <div class="band-bar-track"><div class="band-bar-fill" style="width: 5.0%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Portal Pengiriman Laporan Eksekutif Resmi OIKN -->
         <div class="vis-card insight__full reveal" style="background: #ffffff; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
           <div class="vis-card__icon vis-card__icon--emerald">

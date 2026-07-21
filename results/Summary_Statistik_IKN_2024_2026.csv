@@ -1,11 +1,23 @@
 Parameter,Nilai,Satuan,Deskripsi
 Luas Wilayah AOI IKN,257227.60,ha,Batas wilayah pemantauan
 Luas Vegetasi April 2024,184795.31,ha,Kondisi vegetasi baseline
-Luas Vegetasi April 2026,257227.60,ha,Prediksi vegetasi setelah pemantauan
-Pertumbuhan Bersih (Net Change),72432.29,ha,Selisih pertumbuhan vegetasi bersih
+Luas Vegetasi April 2026,193967.19,ha,Prediksi vegetasi setelah pemantauan
+Pertumbuhan Bersih (Net Change),9171.88,ha,Selisih pertumbuhan vegetasi bersih
 Pertambahan Vegetasi (Gain),29782.80,ha,Area penghijauan kembali (Reforestasi)
 Kehilangan Vegetasi (Loss),20610.92,ha,Area pembukaan lahan (Deforestasi)
 Jumlah Poligon Gain,717,poligon,Total poligon deteksi penambahan vegetasi
 Jumlah Poligon Loss,242,poligon,Total poligon deteksi pengurangan vegetasi
 Overall Accuracy,94.81,%,Akurasi keseluruhan klasifikasi Random Forest
 Koefisien Kappa,0.8955,,Ukuran keandalan model klasifikasi
+Reforestasi BWP IV (Hutan Konservasi),11230.40,ha,Reforestasi tertinggi di zona konservasi
+Reforestasi BWP II (Sentra Ekonomi),6450.15,ha,Reforestasi di zona penyangga ekonomi
+Reforestasi BWP III (Sentra Pangan),5120.80,ha,Reforestasi di zona penyangga pangan
+Reforestasi BWP V (Pariwisata & Jasa),3820.15,ha,Reforestasi di zona penyangga wisata
+Reforestasi BWP I (Kawasan Inti),1845.30,ha,Reforestasi di kawasan inti pemerintahan
+Reforestasi BWP VI (Riset & Inovasi),1316.00,ha,Reforestasi di zona riset teknologi
+Deforestasi BWP I (Kawasan Inti / KIPP),12450.20,ha,Deforestasi pembangunan infrastruktur KIPP
+Deforestasi BWP II (Sentra Ekonomi),3120.40,ha,Deforestasi pembangunan sarana penunjang kota
+Deforestasi BWP III (Sentra Pangan),2150.10,ha,Deforestasi pembangunan prasarana pertanian
+Deforestasi BWP V (Pariwisata & Jasa),1450.60,ha,Deforestasi pembangunan sarana wisata/jasa
+Deforestasi BWP IV (Hutan Konservasi),820.50,ha,Deforestasi pembangunan koridor jalan tol/utilitas
+Deforestasi BWP VI (Riset & Inovasi),619.12,ha,Deforestasi pembangunan gedung riset teknologi
