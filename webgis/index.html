@@ -2402,11 +2402,15 @@
             <input type="range" class="layer-slider" id="opLoss" min="0" max="100" value="60">
           </div>
 
-          <h3 class="peta__sidebar-title" style="margin-top: 0.75rem;"><i class="fas fa-map"></i> Basemap</h3>
+          <h3 class="peta__sidebar-title" style="margin-top: 0.75rem;"><i class="fas fa-map"></i> Basemap & Navigasi</h3>
           <div class="basemap-toggle">
             <button class="basemap-btn active" id="bmLight">Light</button>
             <button class="basemap-btn" id="bmSatellite">Satelit</button>
           </div>
+
+          <button id="btnResetMap" class="basemap-btn" style="margin-top: 0.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 700; background: #ffffff; border: 1px solid var(--border); color: var(--ink);">
+            <i class="fas fa-rotate-left" style="color: var(--primary);"></i> Reset Tampilan Peta
+          </button>
 
           <div style="margin-top:0.75rem;padding:0.55rem 0.65rem;background:var(--surface-alt);border-radius:var(--radius-sm);font-size:0.72rem;color:var(--ink-dim);line-height:1.4;">
             <i class="fas fa-info-circle" style="color:var(--primary);margin-right:0.25rem;"></i>
@@ -4267,6 +4271,44 @@ function maskS2SCL(image) {
 
       /* ── Scale Control ── */
       L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+
+      /* ── Custom Leaflet Reset View Floating Control (Top-Left under Zoom) ── */
+      var ResetControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function () {
+          var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+          var button = L.DomUtil.create('a', '', container);
+          button.href = '#';
+          button.title = 'Reset Tampilan Peta (Reset Bounds)';
+          button.setAttribute('role', 'button');
+          button.setAttribute('aria-label', 'Reset Tampilan Peta');
+          button.style.width = '30px';
+          button.style.height = '30px';
+          button.style.backgroundColor = '#ffffff';
+          button.style.color = '#0f172a';
+          button.style.fontSize = '13px';
+          button.style.display = 'flex';
+          button.style.alignItems = 'center';
+          button.style.justifyContent = 'center';
+          button.innerHTML = '<i class="fas fa-rotate-left"></i>';
+
+          L.DomEvent.disableClickPropagation(button);
+          L.DomEvent.on(button, 'click', function (e) {
+            L.DomEvent.preventDefault(e);
+            tryFitBounds();
+          });
+          return container;
+        }
+      });
+      map.addControl(new ResetControl());
+
+      /* ── Sidebar Reset Map Button Event ── */
+      var btnResetMap = document.getElementById('btnResetMap');
+      if (btnResetMap) {
+        btnResetMap.addEventListener('click', function () {
+          tryFitBounds();
+        });
+      }
     };
 
     /* ── Preloader Boot Sequencer (2 Seconds) ── */
