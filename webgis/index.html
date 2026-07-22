@@ -1725,143 +1725,200 @@
       position: relative;
       width: 100%;
       max-width: 1100px;
-      height: 520px;
-      margin: 2.5rem auto 0;
+      aspect-ratio: 8295 / 5521;
+      max-height: 640px;
+      margin: 2.25rem auto 0;
       border-radius: var(--radius-lg);
       overflow: hidden;
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-lg);
       border: 1px solid var(--border);
+      background: #06140e;
       user-select: none;
       -webkit-user-select: none;
-      touch-action: pan-y;
+      touch-action: none;
+      cursor: ew-resize;
     }
 
-    .curtain-side {
+    .curtain-layer {
       position: absolute;
       inset: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
     }
 
-    .curtain-side--before {
+    .curtain-layer--before {
       z-index: 1;
-      background: radial-gradient(circle at 60% 60%, #047857 0%, #065f46 100%);
-      background-image: url('public/rgb_2026.webp'), url('public/rgb_2026.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #fff;
     }
 
-    .curtain-side--after {
+    .curtain-layer--after {
       z-index: 2;
-      width: 50%;
-      overflow: hidden;
-      background: radial-gradient(circle at 40% 40%, #064e3b 0%, #022c22 100%);
-      background-image: url('public/rgb_2024.webp'), url('public/rgb_2024.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #fff;
-      border-right: 2px solid var(--primary);
+      clip-path: polygon(0 0, var(--curtain-pos, 50%) 0, var(--curtain-pos, 50%) 100%, 0 100%);
+      will-change: clip-path;
     }
 
-    /* Glassmorphic Corner Overlay Cards */
-    .curtain-overlay-card {
-      position: absolute;
-      bottom: 1.5rem;
-      background: rgba(12, 31, 23, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem;
-      max-width: 360px;
-      width: calc(100% - 3rem);
-      box-shadow: var(--shadow-lg);
-      z-index: 5;
-      text-align: left;
-      transition: opacity 0.3s ease;
+    .curtain-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      pointer-events: none;
     }
-
-    .curtain-overlay-card--left {
-      left: 1.5rem;
-    }
-
-    .curtain-overlay-card--right {
-      right: 1.5rem;
-    }
-
-    .curtain-overlay-title {
-      font-family: var(--ff-display);
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--primary-light);
-      margin-bottom: 0.35rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .curtain-overlay-desc {
-      font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.85);
-      line-height: 1.4;
-    }
-
-    @media (max-width: 768px) {
-      .curtain-wrapper {
-        height: 380px;
-      }
-      .curtain-overlay-card {
-        display: none;
-      }
-    }
-
-    .curtain-badge {
-      position: absolute;
-      top: 1.25rem;
-      padding: 0.45rem 0.9rem;
-      font-size: 0.78rem;
-      font-weight: 700;
-      border-radius: var(--radius-pill);
-      backdrop-filter: blur(8px);
-      z-index: 10;
-    }
-
-    .curtain-badge--left { left: 1.25rem; background: rgba(12, 31, 23, 0.75); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
-    .curtain-badge--right { right: 1.25rem; background: rgba(5, 150, 105, 0.85); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
 
     .curtain-handle {
       position: absolute;
-      top: 0; bottom: 0;
-      left: 50%;
-      width: 4px;
-      background: var(--primary);
-      z-index: 15;
-      cursor: ew-resize;
+      top: 0;
+      bottom: 0;
+      left: var(--curtain-pos, 50%);
+      width: 0;
+      z-index: 10;
       transform: translateX(-50%);
-      touch-action: none;
+      pointer-events: none;
+    }
+
+    .curtain-handle__line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      background: var(--primary-light);
+      transform: translateX(-50%);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
     }
 
     .curtain-handle__knob {
       position: absolute;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
-      width: 42px; height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: var(--surface);
-      border: 2px solid var(--primary);
-      box-shadow: var(--shadow-lg);
-      display: flex; align-items: center; justify-content: center;
+      border: 2.5px solid var(--primary);
+      box-shadow: var(--shadow-lg), 0 0 16px rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: var(--primary);
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       transition: transform 0.2s var(--ease-out);
+      pointer-events: auto;
+      cursor: ew-resize;
     }
 
-    .curtain-handle:hover .curtain-handle__knob {
-      transform: translate(-50%, -50%) scale(1.12);
+    .curtain-wrapper:hover .curtain-handle__knob {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .curtain-badge {
+      position: absolute;
+      top: 1rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: var(--radius-pill);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 8;
+      letter-spacing: 0.02em;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .curtain-badge--left {
+      left: 1rem;
+      background: rgba(12, 31, 23, 0.85);
+      color: #a7f3d0;
+      border: 1px solid rgba(167, 243, 208, 0.3);
+    }
+
+    .curtain-badge--right {
+      right: 1rem;
+      background: rgba(4, 120, 87, 0.9);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Unobstructed Info Grid below Curtain */
+    .curtain-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .curtain-info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .curtain-info-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+    }
+
+    .curtain-info-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .curtain-info-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-pill);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .curtain-info-pill--2024 {
+      background: var(--surface-alt);
+      color: var(--ink-muted);
+      border: 1px solid var(--border);
+    }
+
+    .curtain-info-pill--2026 {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--primary);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .curtain-info-title {
+      font-family: var(--ff-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .curtain-info-desc {
+      font-size: 0.83rem;
+      color: var(--ink-body);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .curtain-info-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      .curtain-badge {
+        font-size: 0.68rem;
+        padding: 0.3rem 0.6rem;
+      }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -2470,43 +2527,58 @@
   <section class="komparasi" id="komparasi">
     <div class="container">
       <div class="section-header--center">
-        <span class="section-label reveal">Komparasi Spasial 2024 vs 2026</span>
+        <span class="section-label reveal"><i class="fas fa-sliders"></i> Komparasi Spasial 2024 vs 2026</span>
         <h2 class="section-title reveal">Perbandingan Tirai Interaktif (Before vs After)</h2>
         <p class="section-desc reveal">
-          Geser pegangan slider di bawah ini untuk melihat transisi tutupan lahan dari Komposit Citra Sentinel-2 (April 2024) ke Prediksi Model Random Forest (April 2026).
+          Geser pegangan slider di bawah ini untuk melihat transisi tutupan lahan dari Komposit Citra Satelit Sentinel-2 (April 2024) ke Prediksi Model Random Forest (April 2026).
         </p>
       </div>
 
-      <div class="curtain-wrapper reveal" id="curtainWrapper">
-        <span class="curtain-badge curtain-badge--left"><i class="fas fa-satellite"></i> Sentinel-2 True Color (April 2024)</span>
+      <!-- Main Comparison Curtain Container -->
+      <div class="curtain-wrapper reveal" id="curtainWrapper" style="--curtain-pos: 50%;">
+        <!-- Top Floating Badges -->
+        <span class="curtain-badge curtain-badge--left"><i class="fas fa-satellite"></i> Sentinel-2 Satelit (April 2024)</span>
         <span class="curtain-badge curtain-badge--right"><i class="fas fa-microchip"></i> Prediksi Vegetasi ML (April 2026)</span>
 
-        <div class="curtain-side curtain-side--before">
-          <div class="curtain-overlay-card curtain-overlay-card--right">
-            <div class="curtain-overlay-title">
-              <i class="fas fa-tree"></i> Prediksi Vegetasi (April 2026)
-            </div>
-            <p class="curtain-overlay-desc">
-              Hasil klasifikasi tutupan lahan menggunakan algoritma Random Forest (Akurasi 94,81%, &kappa; = 0,8955). Prediksi vegetasi April 2026 sebesar 193.967,19 ha (75,40% tutupan hijau), mencapai target Green Forest City.
-            </p>
-          </div>
+        <!-- Layer Underneath (April 2026 - Prediksi Vegetasi ML) -->
+        <div class="curtain-layer curtain-layer--before">
+          <img src="public/rgb_2026.webp" onerror="this.onerror=null; this.src='public/rgb_2026.png'" alt="Prediksi Vegetasi April 2026" class="curtain-img" />
         </div>
 
-        <div class="curtain-side curtain-side--after" id="curtainAfter">
-          <div class="curtain-overlay-card curtain-overlay-card--left">
-            <div class="curtain-overlay-title">
-              <i class="fas fa-satellite"></i> Sentinel-2 Satelit (April 2024)
-            </div>
-            <p class="curtain-overlay-desc">
-              Komposit citra Sentinel-2 True Color (RGB 4-3-2) bebas awan hasil mosaik GEE. Menampilkan tutupan vegetasi baseline April 2024 (184.795,31 ha atau 71,84%) di seluruh wilayah IKN (257.227,6 ha).
-            </p>
-          </div>
+        <!-- Layer Top Clipped (April 2024 - Sentinel-2 Satelit) -->
+        <div class="curtain-layer curtain-layer--after" id="curtainAfter">
+          <img src="public/rgb_2024.webp" onerror="this.onerror=null; this.src='public/rgb_2024.png'" alt="Sentinel-2 Satelit April 2024" class="curtain-img" />
         </div>
 
+        <!-- Drag Handle -->
         <div class="curtain-handle" id="curtainHandle">
+          <div class="curtain-handle__line"></div>
           <div class="curtain-handle__knob">
-            <i class="fas fa-left-right"></i>
+            <i class="fas fa-arrows-left-right"></i>
           </div>
+        </div>
+      </div>
+
+      <!-- Clean 2-Column Info Grid below Curtain (Unobstructed View) -->
+      <div class="curtain-info-grid reveal">
+        <div class="curtain-info-card curtain-info-card--2024">
+          <div class="curtain-info-header">
+            <span class="curtain-info-pill curtain-info-pill--2024"><i class="fas fa-calendar-day"></i> April 2024</span>
+            <h4 class="curtain-info-title">Baseline Sentinel-2 Satelit</h4>
+          </div>
+          <p class="curtain-info-desc">
+            Komposit citra Sentinel-2 True Color (RGB 4-3-2) bebas awan hasil mosaik GEE. Menampilkan tutupan vegetasi baseline April 2024 sebesar <strong>184.795,31 ha (71,84%)</strong> di seluruh wilayah IKN (257.227,6 ha).
+          </p>
+        </div>
+
+        <div class="curtain-info-card curtain-info-card--2026">
+          <div class="curtain-info-header">
+            <span class="curtain-info-pill curtain-info-pill--2026"><i class="fas fa-chart-line"></i> April 2026</span>
+            <h4 class="curtain-info-title">Prediksi Model Random Forest</h4>
+          </div>
+          <p class="curtain-info-desc">
+            Hasil klasifikasi tutupan lahan menggunakan algoritma Random Forest (Akurasi 94,81%, &kappa; = 0,8955). Prediksi vegetasi April 2026 sebesar <strong>193.967,19 ha (75,40%)</strong>, mengonfirmasi ketercapaian target Green Forest City.
+          </p>
         </div>
       </div>
     </div>
@@ -4375,22 +4447,43 @@ function maskS2SCL(image) {
       function updatePos(x) {
         var rect = wrapper.getBoundingClientRect();
         var pos = (x - rect.left) / rect.width;
-        if (pos < 0.05) pos = 0.05;
-        if (pos > 0.95) pos = 0.95;
-        var pct = pos * 100;
-        after.style.width = (100 - pct) + '%';
+        if (pos < 0.01) pos = 0.01;
+        if (pos > 0.99) pos = 0.99;
+        var pct = (pos * 100).toFixed(2);
+
+        wrapper.style.setProperty('--curtain-pos', pct + '%');
+        after.style.clipPath = 'polygon(0 0, ' + pct + '% 0, ' + pct + '% 100%, 0 100%)';
         handle.style.left = pct + '%';
       }
 
-      handle.addEventListener('mousedown', function (e) { isDragging = true; e.preventDefault(); });
-      window.addEventListener('mouseup', function () { isDragging = false; });
-      window.addEventListener('mousemove', function (e) { if (isDragging) updatePos(e.clientX); });
+      function onStart(e) {
+        isDragging = true;
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        updatePos(clientX);
+      }
 
-      handle.addEventListener('touchstart', function () { isDragging = true; }, { passive: true });
-      window.addEventListener('touchend', function () { isDragging = false; });
-      window.addEventListener('touchmove', function (e) {
-        if (isDragging && e.touches[0]) updatePos(e.touches[0].clientX);
-      }, { passive: true });
+      function onMove(e) {
+        if (!isDragging) return;
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        updatePos(clientX);
+      }
+
+      function onStop() {
+        isDragging = false;
+      }
+
+      wrapper.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onStop);
+
+      wrapper.addEventListener('touchstart', onStart, { passive: true });
+      window.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', onStop);
+
+      // Initialize at 50% center
+      wrapper.style.setProperty('--curtain-pos', '50%');
+      after.style.clipPath = 'polygon(0 0, 50% 0, 50% 100%, 0 100%)';
+      handle.style.left = '50%';
     };
 
     /* ── CX.initCalculator (Carbon & Reforestation Simulator) ── */
