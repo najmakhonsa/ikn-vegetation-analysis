@@ -1753,8 +1753,9 @@
 
     .curtain-layer--after {
       z-index: 2;
+      -webkit-clip-path: polygon(0 0, var(--curtain-pos, 50%) 0, var(--curtain-pos, 50%) 100%, 0 100%);
       clip-path: polygon(0 0, var(--curtain-pos, 50%) 0, var(--curtain-pos, 50%) 100%, 0 100%);
-      will-change: clip-path;
+      will-change: clip-path, -webkit-clip-path;
     }
 
     .curtain-img {
@@ -4450,9 +4451,11 @@ function maskS2SCL(image) {
         if (pos < 0.01) pos = 0.01;
         if (pos > 0.99) pos = 0.99;
         var pct = (pos * 100).toFixed(2);
+        var poly = 'polygon(0 0, ' + pct + '% 0, ' + pct + '% 100%, 0 100%)';
 
         wrapper.style.setProperty('--curtain-pos', pct + '%');
-        after.style.clipPath = 'polygon(0 0, ' + pct + '% 0, ' + pct + '% 100%, 0 100%)';
+        after.style.webkitClipPath = poly;
+        after.style.clipPath = poly;
         handle.style.left = pct + '%';
       }
 
@@ -4464,6 +4467,7 @@ function maskS2SCL(image) {
 
       function onMove(e) {
         if (!isDragging) return;
+        if (e.cancelable && e.touches) e.preventDefault();
         var clientX = e.touches ? e.touches[0].clientX : e.clientX;
         updatePos(clientX);
       }
@@ -4477,12 +4481,14 @@ function maskS2SCL(image) {
       window.addEventListener('mouseup', onStop);
 
       wrapper.addEventListener('touchstart', onStart, { passive: true });
-      window.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchmove', onMove, { passive: false });
       window.addEventListener('touchend', onStop);
 
       // Initialize at 50% center
+      var initPoly = 'polygon(0 0, 50% 0, 50% 100%, 0 100%)';
       wrapper.style.setProperty('--curtain-pos', '50%');
-      after.style.clipPath = 'polygon(0 0, 50% 0, 50% 100%, 0 100%)';
+      after.style.webkitClipPath = initPoly;
+      after.style.clipPath = initPoly;
       handle.style.left = '50%';
     };
 
