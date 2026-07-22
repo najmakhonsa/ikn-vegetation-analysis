@@ -29,7 +29,7 @@
 1. **Transparansi Spasial Tanpa Black-Box**: Menyediakan platform WebGIS 4-Tab interaktif di mana publik, akademisi, dan pembuat kebijakan dapat menelusuri data dari citra mentah, pemrosesan GEE, hingga prediksi model ML.
 2. **Standardisasi Metodologi GEE & ML**: Menggunakan Google Earth Engine (GEE) dan algoritma `smileRandomForest` (100 Trees, Seed 42, Split 80:20) dengan presisi cloud masking berbasis Scene Classification Layer (SCL).
 3. **Analisis Statistik Lanjutan**: Dilengkapi dengan pengujian keandalan model formal (Wilson Score 95% CI, Uji McNemar, Dekomposisi Kappa, Specificity, NPV, MCC) dan dekomposisi dinamika perubahan (*Net vs Swap* serta *Z-Score Outlier Analysis*).
-4. **Integrasi Custom Enterprise Command Center**: Menghubungkan visualisasi spasial dengan platform AaaS (Automation-as-a-Service), OpenClaw WhatsApp Gateway untuk notifikasi EWS otomatis, GSAP video scrubbing, Split-Screen Curtain Slider, dan Kalkulator Reforestasi Karbon 2030.
+4. **Integrasi Custom Enterprise Command Center**: Menghubungkan visualisasi spasial dengan Codaxiom AI Enterprise Platform, WhatsApp Gateway EWS untuk notifikasi otomatis OIKN, GSAP video scrubbing, Split-Screen Curtain Slider, dan Kalkulator Reforestasi Karbon 2030.
 
 ---
 
@@ -203,8 +203,8 @@ graph TD
     3. *Estimasi Bibit Pohon*: $\text{Target (ha)} \times 1.100\text{ bibit/ha}$.
   - Tombol `Simpan Skenario OIKN 2030` dengan notifikasi toast.
 
-* **Fitur Inovasi 2: OpenClaw WhatsApp Business Gateway EWS Alert Simulator**:
-  - Penyiaran laporan otomatis & peringatan dini alih fungsi lahan langsung ke WhatsApp Otorita IKN via `openclaw-gateway` (`3001` port).
+* **Fitur Inovasi 2: Codaxiom AI WhatsApp EWS Alert Simulator**:
+  - Penyiaran laporan otomatis & peringatan dini alih fungsi lahan langsung ke WhatsApp Otorita IKN berteknologi Codaxiom AI Enterprise Platform.
   - Modal simulator interaktif dengan tombol `Kirim Laporan WA EWS` yang menyimulasikan pengiriman pesan terstruktur berisi ringkasan statistik IKN, prioritas KIPP, dan link portal WebGIS.
 
 * **Fitur Inovasi 3: Split-Screen Spatial Comparison Curtain Slider (`#komparasi`)**:
@@ -269,7 +269,7 @@ Berdasarkan analisis spasiotemporal tutupan vegetasi 2024–2026 per zona Bagian
 
 ## ⚡ 6. Integrasi Custom Enterprise & Fitur Inovasi Terdepan
 
-1. **OpenClaw WhatsApp Business Gateway**: Integrasi langsung dengan `openclaw-gateway` untuk pengiriman laporan otomatis & alert EWS.
+1. **Codaxiom AI Enterprise WhatsApp Gateway**: Integrasi langsung dengan infrastruktur komunikasi otomatis untuk pengiriman laporan otomatis & alert EWS.
 2. **GSAP Scroll-Scrub Video Integration (`hero.mp4`)**: Pengalaman bercerita interaktif (*scrollytelling*) 100vh pinned video.
 3. **Encapsulated Tenant Isolation**: Sesuai *Custom Enterprise AI Capsule Law* ([.agents/AGENTS.md](file:///c:/codaxiom/.agents/AGENTS.md#L159)), seluruh aset terisolasi penuh di bawah `apps/custom-enterprise/ibukotanusantara/`.
 
