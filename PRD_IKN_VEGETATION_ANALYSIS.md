@@ -204,10 +204,14 @@ graph TD
   - Tombol `Simpan Skenario OIKN 2030` dengan notifikasi toast.
 
 * **Fitur Inovasi 2: OpenClaw WhatsApp Business Gateway EWS Alert Simulator**:
-  - Penyiaran laporan otomatis & peringatan dini alih fungsi lahan langsung ke WhatsApp Otorita IKN via `openclaw-gateway`.
+  - Penyiaran laporan otomatis & peringatan dini alih fungsi lahan langsung ke WhatsApp Otorita IKN via `openclaw-gateway` (`3001` port).
+  - Modal simulator interaktif dengan tombol `Kirim Laporan WA EWS` yang menyimulasikan pengiriman pesan terstruktur berisi ringkasan statistik IKN, prioritas KIPP, dan link portal WebGIS.
 
 * **Fitur Inovasi 3: Split-Screen Spatial Comparison Curtain Slider (`#komparasi`)**:
-  - Slider tirai *Before vs After* membandingkan citra Sentinel-2 2024 True Color dengan Peta Prediksi Vegetasi Random Forest 2026.
+  - Slider tirai *Before vs After* interaktif dengan **100% Clip-Path Layer Architecture** (`clip-path: polygon(...)` & `-webkit-clip-path` vendor prefixing) untuk eliminasi total pergeseran piksel saat dragging.
+  - Penyesuaian rasio aspek otomatis (`aspect-ratio: 8295 / 5521`) sesuai dimensi asli citra satelit Sentinel-2.
+  - Layout informasi 2-kolom bersih (*Unobstructed Info Grid*) di bawah bingkai slider agar 100% tampilan citra satelit tidak tertutup kartu teks.
+  - Pengendali touch drag responsif untuk perangkat mobile (`passive: false` dengan `preventDefault()` pada gesture swipe).
 
 ---
 
