@@ -60,7 +60,7 @@ graph TD
     Tab4 --> T4_1[Analisis Spasial Gain +29.782,80 ha vs Loss -20.610,92 ha]
     Tab4 --> T4_2[Dekomposisi Dynamics Net 18,2% vs Swap 81,8%]
     Tab4 --> T4_3[Kalkulator Proyeksi Reforestasi & Sekuestrasi Karbon 2030]
-    Tab4 --> T4_4[OpenClaw WhatsApp Business Gateway EWS Alert Simulator]
+    Tab4 --> T4_4[Evolution API WhatsApp Business Gateway EWS Alert Simulator]
 ```
 
 ---
@@ -280,3 +280,4 @@ Berdasarkan analisis spasiotemporal tutupan vegetasi 2024–2026 per zona Bagian
 1. **Integrasi Data Radar Sentinel-1 SAR**: Polarisasi VV/VH untuk menembus tutupan awan tebal di luar musim kering April.
 2. **Segmentasi Objek Berbasis LiDAR / High-Res UAV**: Estimasi biomassa di atas permukaan (*Above-Ground Biomass*) dan stok karbon IKN.
 3. **Analisis Deret Waktu Multi-Temporal (Monthly Time Series)**: Memantau fluktuasi musiman fenologi vegetasi secara *real-time*.
+
